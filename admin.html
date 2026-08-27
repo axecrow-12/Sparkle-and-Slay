@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — Sparkle & Slay</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <script>
+    // Check authentication
+    if (!sessionStorage.getItem('sparkleAdminSession')) {
+      window.location.href = 'login.html';
+    }
+  </script>
+  <style>
+    .admin-container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+    .form-section {
+      grid-column: 1 / -1;
+    }
+    .collections-list {
+      grid-column: 1 / -1;
+    }
+    .collection-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 1rem;
+      padding: 1rem;
+      border: 1px solid #e6e6e6;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+    .collection-row small {
+      color: #666;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .edit-button, .delete-button {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .edit-button {
+      background: #0f9d58;
+      color: white;
+    }
+    .delete-button {
+      background: #dc3545;
+      color: white;
+    }
+    .info-box {
+      background: #e7f5f2;
+      border: 1px solid #0f9d58;
+      border-radius: 12px;
+      padding: 1.2rem;
+      margin-bottom: 1.5rem;
+      color: #0a5e3d;
+    }
+    .copy-btn {
+      background: var(--dark);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header has-video">
+    <video autoplay muted loop playsinline preload="auto" class="header-video" id="headerVideo">
+      <source src="videos/Elegant Wear.mp4" type="video/mp4">
+    </video>
+    <div class="brand">
+      <img src="photos/A5ecfa8534cd84b8c9e91661fcf73dfc0C-removebg-preview.png" alt="Sparkle & Slay logo" class="logo" onerror="this.onerror=null;this.src='photos/slay.jpeg'" />
+      <div>
+        <h1>Admin Panel</h1>
+        <p>Manage collections and store</p>
+      </div>
+    </div>
+    <nav class="nav-links">
+      <a href="index.html">View Site</a>
+      <a href="collection.html">Collections</a>
+      <a href="#" id="logout-btn" style="color: #dc3545; font-weight: 700;">Logout</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="section-light admin-container">
+      <div class="info-box">
+        <p><strong>Welcome, Owner!</strong> Use this admin panel to add, edit, or remove collections from your device. All changes are saved automatically.</p>
+      </div>
+
+      <div class="form-section">
+        <h3>Add New Collection</h3>
+        <form id="admin-form" class="add-form">
+          <input type="text" id="admin-name" placeholder="Collection Name" required />
+          <textarea id="admin-description" placeholder="Description" required></textarea>
+          <input type="url" id="admin-image" placeholder="Image URL (e.g., photos/image.jpg)" />
+          <input type="url" id="admin-video" placeholder="Video URL (e.g., https://example.com/video.mp4)" />
+          <button type="submit">Add Collection</button>
+        </form>
+      </div>
+
+      <div class="collections-list">
+        <h3>Your Collections</h3>
+        <div id="admin-list"></div>
+        <div id="no-collections" class="page-note" style="display:none;">
+          <p>No collections yet. Add your first collection above!</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Sparkle & Slay. Admin Panel.</p>
+  </footer>
+
+  <script src="admin.js"></script>
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>Contact Us</h4>
+        <p><strong>Email:</strong> <a href="mailto:sales@sparkleandslay.com">sales@sparkleandslay.com</a></p>
+        <p><strong>Phone:</strong> <a href="tel:+263776593476">+263 77 659 3476</a></p>
+        <p><strong>WhatsApp:</strong> <a href="https://wa.me/263776593476" target="_blank" rel="noopener">Chat with us</a></p>
+      </div>
+      <div class="footer-section">
+        <h4>Visit Us</h4>
+        <p>Corner Robert and Angwa<br>NiceWear Mall Shop 2<br>Harare, Zimbabwe</p>
+      </div>
+      <div class="footer-section">
+        <h4>Follow Us</h4>
+        <div class="social-links-footer">
+          <a href="https://facebook.com/sparkleandslay" target="_blank" rel="noopener" title="Facebook"><i class="fab fa-facebook"></i></a>
+          <a href="https://instagram.com/sparkleandslay" target="_blank" rel="noopener" title="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="https://tiktok.com/@sparkleandslay" target="_blank" rel="noopener" title="TikTok"><i class="fab fa-tiktok"></i></a>
+        </div>
+      </div>
+      <div class="footer-section">
+        <h4>Quick Links</h4>
+        <div class="footer-links">
+          <a href="index.html">Home</a>
+          <a href="collection.html">Collections</a>
+          <a href="contact.html">Contact</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Sparkle & Slay. All rights reserved.</p>
+    </div>
+  </footer>

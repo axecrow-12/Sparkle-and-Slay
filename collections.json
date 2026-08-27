@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Urban Essentials",
+    "description": "Modern black and white staples for every look.",
+    "image": "photos/slay.jpeg",
+    "video": ""
+  },
+  {
+    "name": "Green Glow",
+    "description": "Fresh green pieces designed to stand out with polish and flair.",
+    "image": "photos/Sparkle.jpeg",
+    "video": ""
+  },
+  {
+    "name": "Statement Looks",
+    "description": "Bold, premium outfits that make a memorable impression.",
+    "image": "",
+    "video": ""
+  }
+]

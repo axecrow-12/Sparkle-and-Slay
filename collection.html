@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Collections — Sparkle & Slay</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Splash Screen -->
+  <div class="splash-screen" id="splashScreen">
+    <div class="splash-content">
+      <img src="photos/A5ecfa8534cd84b8c9e91661fcf73dfc0C-removebg-preview.png" alt="Sparkle & Slay logo" class="splash-logo" onerror="this.onerror=null;this.src='photos/slay.jpeg'" />
+      <h1 class="splash-title">Sparkle & Slay</h1>
+      <div class="loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </div>
+
+  <header class="site-header has-video">
+    <video autoplay muted loop playsinline preload="auto" class="header-video" id="headerVideo">
+      <source src="videos/Elegant Wear.mp4" type="video/mp4">
+    </video>
+    <div class="brand">
+      <img src="photos/A5ecfa8534cd84b8c9e91661fcf73dfc0C-removebg-preview.png" alt="Sparkle & Slay logo" class="logo" onerror="this.onerror=null;this.src='photos/slay.jpeg'" />
+      <div>
+        <h1>Collections</h1>
+        <p>Everything in stock</p>
+      </div>
+    </div>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="contact.html">Contact</a>
+      <div class="social-links-header">
+        <a href="https://facebook.com/sparkleandslay" target="_blank" rel="noopener" title="Facebook"><i class="fab fa-facebook"></i></a>
+        <a href="https://tiktok.com/@sparkleandslay" target="_blank" rel="noopener" title="TikTok"><i class="fab fa-tiktok"></i></a>
+        <a href="https://instagram.com/sparkleandslay" target="_blank" rel="noopener" title="Instagram"><i class="fab fa-instagram"></i></a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="section-light">
+      <div class="section-header">
+        <h3>Our Collections</h3>
+        <p>Discover our latest fashion pieces.</p>
+      </div>
+
+      <div id="add-collection-form" class="add-form" style="display:none;">
+        <h4>Add New Collection</h4>
+        <form id="collection-form">
+          <input type="text" id="collection-name" placeholder="Collection Name" required />
+          <textarea id="collection-description" placeholder="Description" required></textarea>
+          <input type="url" id="collection-image" placeholder="Image URL (e.g., photos/image.jpg)" />
+          <input type="url" id="collection-video" placeholder="Video URL (e.g., https://example.com/video.mp4)" />
+          <button type="submit">Add Collection</button>
+          <button type="button" id="cancel-add">Cancel</button>
+        </form>
+      </div>
+
+      <div class="section-actions">
+        <button id="show-add-form" class="button">Add New Collection</button>
+      </div>
+
+      <div id="collection-list" class="collection-grid"></div>
+
+      <div id="empty-message" class="page-note" style="display:none;">
+        <p>No collections available yet. Check back soon!</p>
+      </div>
+
+      <div id="ecocash-order-modal" class="modal-overlay" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="order-modal-title">
+          <button id="close-order-modal" class="modal-close" aria-label="Close order form">&times;</button>
+          <h4 id="order-modal-title">Order with Ecocash</h4>
+          <p id="order-item-name">Selected item:</p>
+          <p class="order-note">Pay using Ecocash merchant number <strong>0783 123 456</strong>. Enter your payment reference and delivery details below.</p>
+
+          <form id="order-form">
+            <label>
+              Full name
+              <input type="text" id="order-name" placeholder="Your name" required />
+            </label>
+            <label>
+              Phone number
+              <input type="tel" id="order-phone" placeholder="Ecocash phone number" required />
+            </label>
+            <label>
+              Ecocash reference
+              <input type="text" id="order-reference" placeholder="Payment reference" required />
+            </label>
+            <label>
+              Amount (with charges)
+              <input type="text" id="order-amount" placeholder="Amount to pay" required />
+            </label>
+            <div class="modal-actions">
+              <button type="submit" class="button">Submit Order</button>
+              <button type="button" id="cancel-order" class="button button-secondary">Cancel</button>
+            </div>
+          </form>
+
+          <div id="order-confirmation" class="page-note" style="display:none;">
+            <p>Thanks! Your order request has been submitted. Please pay using Ecocash merchant <strong>0783 123 456</strong> and keep your reference safe.</p>
+            <p>You can also email the order details to <a href="mailto:orders@sparkleandslay.com">orders@sparkleandslay.com</a> for faster processing.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>Contact Us</h4>
+        <p><strong>Email:</strong> <a href="mailto:sales@sparkleandslay.com">sales@sparkleandslay.com</a></p>
+        <p><strong>Phone:</strong> <a href="tel:+263776593476">+263 77 659 3476</a></p>
+        <p><strong>WhatsApp:</strong> <a href="https://wa.me/263776593476" target="_blank" rel="noopener">Chat with us</a></p>
+      </div>
+      <div class="footer-section">
+        <h4>Visit Us</h4>
+        <p>Corner Robert and Angwa<br>NiceWear Mall Shop 2<br>Harare, Zimbabwe</p>
+      </div>
+      <div class="footer-section">
+        <h4>Follow Us</h4>
+        <div class="social-links-footer">
+          <a href="https://facebook.com/sparkleandslay" target="_blank" rel="noopener" title="Facebook"><i class="fab fa-facebook"></i></a>
+          <a href="https://instagram.com/sparkleandslay" target="_blank" rel="noopener" title="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="https://tiktok.com/@sparkleandslay" target="_blank" rel="noopener" title="TikTok"><i class="fab fa-tiktok"></i></a>
+        </div>
+      </div>
+      <div class="footer-section">
+        <h4>Quick Links</h4>
+        <div class="footer-links">
+          <a href="index.html">Home</a>
+          <a href="collection.html">Collections</a>
+          <a href="contact.html">Contact</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Sparkle & Slay. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Splash screen - hide after 3 seconds
+    setTimeout(() => {
+      const splashScreen = document.getElementById('splashScreen');
+      if (splashScreen) {
+        splashScreen.classList.add('hide');
+      }
+    }, 3000);
+  </script>
+
+  <script src="collections.js"></script>
+</body>
+</html>
