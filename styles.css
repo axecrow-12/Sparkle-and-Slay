@@ -4,10 +4,10 @@
 :root {
   --bg: #eef9f2;
   --text: #020a08;
-  --accent: #2b7a4b;
+  --accent: #236b42;
   --accent-soft: #79c18c;
   --dark: #162d2b;
-  --muted: #5f7b73;
+  --muted: #45665b;
   --surface: #ffffff;
   --surface-alt: #dcefee;
   --brand-blue: #d9f0ff;
@@ -263,7 +263,8 @@ main {
 
 .nav-links a {
   font-weight: 600;
-  color: var(--dark);
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.75);
 }
 
 .hero {
@@ -569,6 +570,11 @@ body.page-exit {
   color: var(--muted);
 }
 
+.section-header p,
+.contact-section p {
+  color: #345449;
+}
+
 .cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -601,7 +607,7 @@ body.page-exit {
 
 .card p {
   margin: 0;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.96);
 }
 
 .section-dark {
@@ -687,7 +693,7 @@ body.page-exit {
 
 .collection-card p {
   margin: 0 0 1.2rem;
-  color: #2f3a35;
+  color: #29463a;
 }
 
 .collection-card .buy-button,
