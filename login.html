@@ -256,14 +256,9 @@
     <p>&copy; 2026 Sparkle & Slay. Admin Panel.</p>
   </footer>
 
+  <script src="splash.js"></script>
   <script>
-    // Splash screen - hide after 3 seconds
-    setTimeout(() => {
-      const splashScreen = document.getElementById('splashScreen');
-      if (splashScreen) {
-        splashScreen.classList.add('hide');
-      }
-    }, 3000);
+    // Splash screen: shown in full only on the first page of the session, see splash.js
 
     const loginMode = document.getElementById('login-mode');
     const setupMode = document.getElementById('setup-mode');

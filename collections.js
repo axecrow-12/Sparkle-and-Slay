@@ -103,6 +103,9 @@ if (sessionStorage.getItem('sparkleAdminToken')) {
   if (actions) actions.style.display = 'none';
 }
 
+listEl.innerHTML = '<div class="page-note"><p>Loading collections...</p></div>';
+emptyMessage.style.display = 'none';
+
 showAddBtn.addEventListener('click', () => {
   addForm.style.display = 'block';
   showAddBtn.style.display = 'none';

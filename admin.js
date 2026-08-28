@@ -169,4 +169,5 @@ form.addEventListener('submit', async (e) => {
 });
 
 // Initialize
+listEl.innerHTML = '<p>Loading collections...</p>';
 loadCollections();

@@ -231,14 +231,9 @@
       <p>&copy; 2026 Sparkle & Slay. All rights reserved.</p>
     </div>
   </footer>
+  <script src="splash.js"></script>
   <script>
-    // Splash screen - hide after 3 seconds
-    setTimeout(() => {
-      const splashScreen = document.getElementById('splashScreen');
-      if (splashScreen) {
-        splashScreen.classList.add('hide');
-      }
-    }, 3000);
+    // Splash screen: shown in full only on the first page of the session, see splash.js
 
     document.body.classList.add('page-enter');
     requestAnimationFrame(() => document.body.classList.remove('page-enter'));
@@ -271,6 +266,7 @@
     revealItems.forEach(item => observer.observe(item));
 
     const featuredCards = document.getElementById('featured-cards');
+    featuredCards.innerHTML = '<div class="page-note"><p>Loading collections...</p></div>';
 
     const renderFeaturedCollections = (collections) => {
       featuredCards.innerHTML = '';
