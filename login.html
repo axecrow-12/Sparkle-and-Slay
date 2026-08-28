@@ -274,17 +274,16 @@
     }
 
     // Show setup mode automatically if no password has been set yet
-    fetch(`${API_BASE}/auth/status`)
-      .then((r) => r.json())
-      .then(({ hasPassword }) => {
-        if (!hasPassword) {
-          loginMode.style.display = 'none';
-          setupMode.style.display = 'block';
-        }
-      })
-      .catch(() => {
-        showError('Could not reach the server. Is the backend running?');
-      });
+    if (USE_BACKEND) {
+      fetch(`${API_BASE}/auth/status`)
+        .then((r) => r.json())
+        .then(({ hasPassword }) => {
+          if (!hasPassword) {
+            loginMode.style.display = 'none';
+            setupMode.style.display = 'block';
+          }
+        });
+    }
 
     // Toggle between login and setup
     toggleSetup.addEventListener('click', (e) => {
@@ -305,6 +304,11 @@
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const password = document.getElementById('login-password').value;
+
+      if (!USE_BACKEND) {
+        showError('Admin login will be available when the backend is enabled.');
+        return;
+      }
 
       try {
         const response = await fetch(`${API_BASE}/auth/login`, {
@@ -341,6 +345,11 @@
       e.preventDefault();
       const password = document.getElementById('setup-password').value;
       const confirm = document.getElementById('setup-confirm').value;
+
+      if (!USE_BACKEND) {
+        showError('Admin setup will be available when the backend is enabled.');
+        return;
+      }
 
       if (password.length < 8) {
         showError('Password must be at least 8 characters.');

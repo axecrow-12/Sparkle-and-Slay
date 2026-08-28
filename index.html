@@ -33,7 +33,13 @@
     </div>
 
     <nav class="nav-links">
-        <a href="collection.html">Collections</a>
+        <a href="collection.html" class="header-cart-link" aria-label="Open shopping cart and collections" title="Shopping cart">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="20" r="1"></circle>
+            <circle cx="18" cy="20" r="1"></circle>
+            <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6"></path>
+          </svg>
+        </a>
         <a href="#about">About</a>
         <a href="contact.html">Contact</a>
 
@@ -95,6 +101,7 @@
 
       <div id="featured-cards" class="cards">
         <article class="card">
+          <img src="photos/jean1.png" alt="Urban Essentials collection" />
           <h4>Urban Essentials</h4>
           <p>
             Modern staples designed in sleek and crisp tones.
@@ -102,16 +109,26 @@
         </article>
 
         <article class="card">
-          <h4>Glow</h4>
+          <img src="photos/dress1.png" alt="Statement Looks collection" />
+          <h4>Statement Looks</h4>
           <p>
-            Signature pieces that bring elegance to every outfit.
+            Head-turning styles for when you want to make a lasting impression.
           </p>
         </article>
 
         <article class="card">
-          <h4>Statement Looks</h4>
+          <img src="photos/jean2.png" alt="Everyday Essentials collection" />
+          <h4>Everyday Essentials</h4>
           <p>
-            Head-turning styles for when you want to make a lasting impression.
+            Easy everyday pieces with a polished, versatile finish.
+          </p>
+        </article>
+
+        <article class="card">
+          <img src="photos/dress2.png" alt="Second Look collection" />
+          <h4>Second Look</h4>
+          <p>
+            A statement dress designed for memorable occasions.
           </p>
         </article>
       </div>
@@ -268,6 +285,29 @@
     const featuredCards = document.getElementById('featured-cards');
     featuredCards.innerHTML = '<div class="page-note"><p>Loading collections...</p></div>';
 
+    const featuredCollections = [
+      {
+        name: 'Urban Essentials',
+        description: 'Modern staples designed in sleek and crisp tones.',
+        image: 'photos/jean1.png',
+      },
+      {
+        name: 'Statement Looks',
+        description: 'Head-turning styles for when you want to make a lasting impression.',
+        image: 'photos/dress1.png',
+      },
+      {
+        name: 'Everyday Essentials',
+        description: 'Easy everyday pieces with a polished, versatile finish.',
+        image: 'photos/jean2.png',
+      },
+      {
+        name: 'Second Look',
+        description: 'A statement dress designed for memorable occasions.',
+        image: 'photos/dress2.png',
+      },
+    ];
+
     const renderFeaturedCollections = (collections) => {
       featuredCards.innerHTML = '';
       if (!collections || collections.length === 0) {
@@ -275,9 +315,28 @@
         return;
       }
 
-      collections.slice(0, 3).forEach((item) => {
+      collections.slice(0, 4).forEach((item) => {
         const card = document.createElement('article');
         card.className = 'card';
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-label', `View ${item.name || 'collection'}`);
+        card.addEventListener('click', () => {
+          window.location.href = 'collection.html';
+        });
+        card.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            window.location.href = 'collection.html';
+          }
+        });
+
+        if (item.image) {
+          const image = document.createElement('img');
+          image.src = item.image;
+          image.alt = `${item.name || 'Collection'} product photo`;
+          card.appendChild(image);
+        }
 
         const title = document.createElement('h4');
         title.textContent = item.name || 'Untitled Collection';
@@ -291,17 +350,7 @@
       });
     };
 
-    fetch(`${API_BASE}/collections`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Could not load collections.');
-        }
-        return response.json();
-      })
-      .then((collections) => renderFeaturedCollections(collections))
-      .catch(() => {
-        featuredCards.innerHTML = '<div class="page-note"><p>Could not load collections. Is the backend running?</p></div>';
-      });
+    renderFeaturedCollections(featuredCollections);
 
     const newsletterForm = document.getElementById('newsletter-form');
     const newsletterStatus = document.getElementById('newsletter-status');
@@ -313,6 +362,12 @@
       newsletterStatus.style.display = 'none';
 
       try {
+        if (!USE_BACKEND) {
+          newsletterStatus.textContent = 'Newsletter signup will be available soon.';
+          newsletterStatus.style.display = 'block';
+          return;
+        }
+
         const response = await fetch(`${API_BASE}/subscribe`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

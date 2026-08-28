@@ -48,6 +48,7 @@ function renderAdminCollections() {
     const info = document.createElement('div');
     info.innerHTML = `
       <strong>${item.name}</strong><br>
+      <small>${item.price !== null && item.price !== undefined ? `$${Number(item.price).toFixed(2)}` : 'Price on request'}</small><br>
       <small>${item.description.substring(0, 60)}${item.description.length > 60 ? '...' : ''}</small>
     `;
 
@@ -107,6 +108,7 @@ function editCollection(item) {
   editingId = item.id;
   document.getElementById('admin-name').value = item.name;
   document.getElementById('admin-description').value = item.description;
+  document.getElementById('admin-price').value = item.price ?? '';
   document.getElementById('admin-image').value = item.image || '';
   document.getElementById('admin-video').value = item.video || '';
   form.querySelector('button[type="submit"]').textContent = 'Save Changes';
@@ -131,14 +133,15 @@ form.addEventListener('submit', async (e) => {
 
   const name = document.getElementById('admin-name').value.trim();
   const description = document.getElementById('admin-description').value.trim();
+  const price = Number(document.getElementById('admin-price').value);
   const image = document.getElementById('admin-image').value.trim();
   const video = document.getElementById('admin-video').value.trim();
 
-  if (!name || !description) {
+  if (!name || !description || !Number.isFinite(price) || price < 0) {
     return;
   }
 
-  const payload = { name, description, image, video };
+  const payload = { name, description, image, video, price };
   const isEditing = editingId !== null;
   const url = isEditing ? `${API_BASE}/collections/${editingId}` : `${API_BASE}/collections`;
   const method = isEditing ? 'PUT' : 'POST';

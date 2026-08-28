@@ -1,20 +1,50 @@
 [
   {
-    "name": "Urban Essentials",
-    "description": "Modern black and white staples for every look.",
-    "image": "photos/slay.jpeg",
-    "video": ""
+    "id": 5,
+    "name": "Blue Dress",
+    "description": "A graceful blue silhouette for polished day-to-evening style.",
+    "image": "photos/Blue Dress.jpeg",
+    "video": "",
+    "price": 12
   },
   {
-    "name": "Green Glow",
-    "description": "Fresh green pieces designed to stand out with polish and flair.",
-    "image": "photos/Sparkle.jpeg",
-    "video": ""
+    "id": 7,
+    "name": "Brown Dress",
+    "description": "A rich brown dress with an elegant, confident finish.",
+    "image": "photos/Brown Dress.jpeg",
+    "video": "",
+    "price": 12
   },
   {
-    "name": "Statement Looks",
-    "description": "Bold, premium outfits that make a memorable impression.",
-    "image": "",
-    "video": ""
+    "id": 12,
+    "name": "Pink Set",
+    "description": "A polished pink co-ord for bright, confident styling.",
+    "image": "photos/Pink Set.jpeg",
+    "video": "",
+    "price": 25
+  },
+  {
+    "id": 6,
+    "name": "Blue Set",
+    "description": "A coordinated blue set made for effortless styling.",
+    "image": "photos/Blue Set.jpeg",
+    "video": "",
+    "price": 25
+  },
+  {
+    "id": 10,
+    "name": "Denim Cargo",
+    "description": "Relaxed cargo denim with a bold everyday attitude.",
+    "image": "photos/jean3.png",
+    "video": "",
+    "price": 48
+  },
+  {
+    "id": 11,
+    "name": "Classic Denim",
+    "description": "A versatile denim essential with a clean, classic cut.",
+    "image": "photos/jean4.jpg",
+    "video": "",
+    "price": 44
   }
 ]
