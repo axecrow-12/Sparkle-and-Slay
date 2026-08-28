@@ -6,6 +6,7 @@
   <title>Sparkle & Slay Clothing</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="styles.css" />
+  <script src="config.js"></script>
 </head>
 <body class="page-enter">
   <!-- Splash Screen -->
@@ -145,7 +146,7 @@
           </div>
           <div class="arrival-card">
             <div class="arrival-image">
-              <img src= "photos/Gemini_Generated_Image_h5eczkh5eczkh5ec.png"alt="New Arrival" />
+              <img src="photos/Gemini_Generated_Image_h5eczkh5eczkh5ec.png" alt="New Arrival" />
             </div>
             <h4>Coming Soon</h4>
             <p>New items added weekly</p>
@@ -162,15 +163,13 @@
     </section>
 
     <section id="collection" class="section-light fade-up">
-      <div class="section-header"><section class="hero">
-        <p class="eyebrow">Style with confidence<br>Discover collections crafted for everyday luxury and standout looks </p>
+      <div class="hero">
+        <p class="eyebrow">Style with confidence<br>Discover collections crafted for everyday luxury and standout looks</p>
         <h2>Elevate your wardrobe with bold, modern apparel.</h2>
-      
         <a class="button" href="collection.html">Shop the Collection</a>
-      
+      </div>
     </section>
-                </div>
-    
+
 
     <section id="about" class="section-dark fade-up">
       <div class="about-inner">
@@ -190,10 +189,11 @@
         <h3>Stay in Touch</h3>
         <p>Get new arrivals, style updates, and exclusive offers delivered to your inbox.</p>
       </div>
-      <form class="contact-form">
-        <input type="email" placeholder="Your email address" aria-label="Your email address" />
+      <form class="contact-form" id="newsletter-form">
+        <input type="email" id="newsletter-email" placeholder="Your email address" aria-label="Your email address" required />
         <button type="submit">Join the List</button>
       </form>
+      <p id="newsletter-status" class="page-note" style="display:none;"></p>
     </section>
   </main>
 
@@ -271,28 +271,6 @@
     revealItems.forEach(item => observer.observe(item));
 
     const featuredCards = document.getElementById('featured-cards');
-    const collectionsFile = 'collections.json';
-    let homepageBaseCollections = [];
-
-    const loadLocalCollections = () => {
-      try {
-        return JSON.parse(localStorage.getItem('sparkleCollections') || '[]');
-      } catch {
-        return [];
-      }
-    };
-
-    const mergeHomepageCollections = (jsonCollections) => {
-      const baseCollections = Array.isArray(jsonCollections) ? jsonCollections : [];
-      const localCollections = Array.isArray(loadLocalCollections()) ? loadLocalCollections() : [];
-      const merged = [...localCollections, ...baseCollections].reduce((acc, item) => {
-        if (!acc.some(existing => existing.name === item.name)) {
-          acc.push(item);
-        }
-        return acc;
-      }, []);
-      return merged.slice(0, 3);
-    };
 
     const renderFeaturedCollections = (collections) => {
       featuredCards.innerHTML = '';
@@ -301,7 +279,7 @@
         return;
       }
 
-      collections.forEach((item) => {
+      collections.slice(0, 3).forEach((item) => {
         const card = document.createElement('article');
         card.className = 'card';
 
@@ -317,34 +295,47 @@
       });
     };
 
-    const refreshFeaturedCollections = () => {
-      if (homepageBaseCollections.length > 0) {
-        renderFeaturedCollections(mergeHomepageCollections(homepageBaseCollections));
-      } else {
-        renderFeaturedCollections(loadLocalCollections());
-      }
-    };
-
-    window.addEventListener('storage', (event) => {
-      if (event.key === 'sparkleCollections') {
-        refreshFeaturedCollections();
-      }
-    });
-
-    fetch(collectionsFile)
+    fetch(`${API_BASE}/collections`)
       .then((response) => {
         if (!response.ok) {
-          throw new Error('Collections file unavailable.');
+          throw new Error('Could not load collections.');
         }
         return response.json();
       })
-      .then((jsonCollections) => {
-        homepageBaseCollections = Array.isArray(jsonCollections) ? jsonCollections : [];
-        refreshFeaturedCollections();
-      })
+      .then((collections) => renderFeaturedCollections(collections))
       .catch(() => {
-        refreshFeaturedCollections();
+        featuredCards.innerHTML = '<div class="page-note"><p>Could not load collections. Is the backend running?</p></div>';
       });
+
+    const newsletterForm = document.getElementById('newsletter-form');
+    const newsletterStatus = document.getElementById('newsletter-status');
+
+    newsletterForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('newsletter-email').value.trim();
+
+      newsletterStatus.style.display = 'none';
+
+      try {
+        const response = await fetch(`${API_BASE}/subscribe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          newsletterStatus.textContent = data.error || 'Could not subscribe. Please try again.';
+        } else {
+          newsletterStatus.textContent = "You're on the list! Thanks for joining.";
+          newsletterForm.reset();
+        }
+      } catch (err) {
+        newsletterStatus.textContent = 'Could not reach the server. Is the backend running?';
+      }
+
+      newsletterStatus.style.display = 'block';
+    });
   </script>
 </body>
 </html>

@@ -6,6 +6,7 @@
   <title>Admin Login — Sparkle & Slay</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="styles.css" />
+  <script src="config.js"></script>
   <style>
     .login-container {
       display: grid;
@@ -19,6 +20,7 @@
       box-shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
       overflow: hidden;
       text-align: left;
+      pointer-events: auto;
     }
 
     .login-page main {
@@ -34,6 +36,7 @@
       min-height: 0;
       margin-top: 0;
       padding: 5rem 1rem 2rem;
+      pointer-events: none;
     }
 
     .login-page {
@@ -196,7 +199,6 @@
 
   <header class="site-header has-video">
     <div class="brand">
-      <img src="photos/A5ecfa8534cd84b8c9e91661fcf73dfc0C.jpg" alt="Sparkle & Slay logo" class="logo" />
       <div>
         <h1>Sparkle & Slay</h1>
         <p>Admin Access</p>
@@ -269,13 +271,25 @@
     const toggleLogin = document.getElementById('toggle-login');
     const errorMessage = document.getElementById('error-message');
 
-    const ADMIN_PASSWORD_KEY = 'sparkleAdminPassword';
-    const SESSION_KEY = 'sparkleAdminSession';
+    const SESSION_KEY = 'sparkleAdminToken';
 
     // Check if already logged in
     if (sessionStorage.getItem(SESSION_KEY)) {
       window.location.href = 'admin.html';
     }
+
+    // Show setup mode automatically if no password has been set yet
+    fetch(`${API_BASE}/auth/status`)
+      .then((r) => r.json())
+      .then(({ hasPassword }) => {
+        if (!hasPassword) {
+          loginMode.style.display = 'none';
+          setupMode.style.display = 'block';
+        }
+      })
+      .catch(() => {
+        showError('Could not reach the server. Is the backend running?');
+      });
 
     // Toggle between login and setup
     toggleSetup.addEventListener('click', (e) => {
@@ -293,38 +307,48 @@
     });
 
     // Login form
-    document.getElementById('login-form').addEventListener('submit', (e) => {
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const password = document.getElementById('login-password').value;
-      const storedPassword = localStorage.getItem(ADMIN_PASSWORD_KEY);
 
-      if (!storedPassword) {
-        showError('No password set yet. Please set one first.');
-        setTimeout(() => {
-          loginMode.style.display = 'none';
-          setupMode.style.display = 'block';
-        }, 1500);
-        return;
-      }
+      try {
+        const response = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password }),
+        });
+        const data = await response.json();
 
-      if (password === storedPassword) {
-        sessionStorage.setItem(SESSION_KEY, 'true');
+        if (!response.ok) {
+          if (response.status === 404) {
+            showError('No password set yet. Please set one first.');
+            setTimeout(() => {
+              loginMode.style.display = 'none';
+              setupMode.style.display = 'block';
+            }, 1500);
+          } else {
+            showError(data.error || 'Invalid password. Please try again.');
+            document.getElementById('login-password').value = '';
+          }
+          return;
+        }
+
+        sessionStorage.setItem(SESSION_KEY, data.token);
         alert('✓ Login successful! Redirecting to admin panel...');
         window.location.href = 'admin.html';
-      } else {
-        showError('Invalid password. Please try again.');
-        document.getElementById('login-password').value = '';
+      } catch (err) {
+        showError('Could not reach the server. Is the backend running?');
       }
     });
 
     // Setup form
-    document.getElementById('setup-form').addEventListener('submit', (e) => {
+    document.getElementById('setup-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const password = document.getElementById('setup-password').value;
       const confirm = document.getElementById('setup-confirm').value;
 
-      if (password.length < 4) {
-        showError('Password must be at least 4 characters.');
+      if (password.length < 8) {
+        showError('Password must be at least 8 characters.');
         return;
       }
 
@@ -333,10 +357,25 @@
         return;
       }
 
-      localStorage.setItem(ADMIN_PASSWORD_KEY, password);
-      sessionStorage.setItem(SESSION_KEY, 'true');
-      alert('✓ Password set successfully! Redirecting to admin panel...');
-      window.location.href = 'admin.html';
+      try {
+        const response = await fetch(`${API_BASE}/auth/setup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password }),
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          showError(data.error || 'Could not set password.');
+          return;
+        }
+
+        sessionStorage.setItem(SESSION_KEY, data.token);
+        alert('✓ Password set successfully! Redirecting to admin panel...');
+        window.location.href = 'admin.html';
+      } catch (err) {
+        showError('Could not reach the server. Is the backend running?');
+      }
     });
 
     function showError(message) {

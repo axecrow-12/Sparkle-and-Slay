@@ -1,6 +1,5 @@
 const listEl = document.getElementById('collection-list');
 const emptyMessage = document.getElementById('empty-message');
-const collectionsFile = 'collections.json';
 const addForm = document.getElementById('add-collection-form');
 const showAddBtn = document.getElementById('show-add-form');
 const cancelAddBtn = document.getElementById('cancel-add');
@@ -16,7 +15,7 @@ function renderCollections() {
   }
 
   emptyMessage.style.display = 'none';
-  collections.forEach((item, index) => {
+  collections.forEach((item) => {
     const card = document.createElement('article');
     card.className = 'collection-card';
 
@@ -52,28 +51,18 @@ function renderCollections() {
     const description = document.createElement('p');
     description.textContent = item.description || 'No description provided.';
 
-    const buyBtn = document.createElement('button');
-    buyBtn.className = 'buy-button';
-    buyBtn.textContent = 'Buy Now';
-    buyBtn.addEventListener('click', () => openOrderModal(item));
-
-    const removeBtn = document.createElement('button');
-    removeBtn.className = 'remove-button';
-    removeBtn.textContent = 'Remove';
-    removeBtn.addEventListener('click', () => removeCollection(index));
-
     if (mediaContainer.children.length > 0) {
       card.appendChild(mediaContainer);
     }
     card.appendChild(title);
     card.appendChild(description);
-    card.appendChild(buyBtn);
+
     const orderBtn = document.createElement('button');
     orderBtn.className = 'buy-button';
     orderBtn.textContent = 'Order with Ecocash';
     orderBtn.addEventListener('click', () => openOrderModal(item));
     card.appendChild(orderBtn);
-    card.appendChild(removeBtn);
+
     listEl.appendChild(card);
   });
 }
@@ -101,51 +90,19 @@ function closeOrderModal() {
   orderModal.setAttribute('aria-hidden', 'true');
 }
 
-function loadOrders() {
-  try {
-    return JSON.parse(localStorage.getItem('sparkleOrders') || '[]');
-  } catch {
-    return [];
-  }
-}
-
-function saveOrder(order) {
-  const orders = loadOrders();
-  orders.push(order);
-  localStorage.setItem('sparkleOrders', JSON.stringify(orders));
-}
-
-function removeCollection(index) {
-  if (confirm('Are you sure you want to remove this collection?')) {
-    collections.splice(index, 1);
-    saveCollections();
-    renderCollections();
-  }
-}
-
-function saveCollections() {
-  localStorage.setItem('sparkleCollections', JSON.stringify(collections));
-}
-
-function loadCollections() {
-  const stored = localStorage.getItem('sparkleCollections');
-  if (stored) {
-    collections = JSON.parse(stored);
-  }
-}
-
 function showError(message) {
   listEl.innerHTML = `<div class="page-note"><p>${message}</p></div>`;
   emptyMessage.style.display = 'none';
 }
 
-function mergeCollections(jsonCollections) {
-  const baseCollections = Array.isArray(jsonCollections) ? jsonCollections : [];
-  const storedCollections = JSON.parse(localStorage.getItem('sparkleCollections') || '[]');
-  collections = [...baseCollections, ...storedCollections];
+// Event listeners for the (admin-only, token protected) add form
+if (sessionStorage.getItem('sparkleAdminToken')) {
+  document.querySelector('.section-actions').style.display = '';
+} else {
+  const actions = document.querySelector('.section-actions');
+  if (actions) actions.style.display = 'none';
 }
 
-// Event listeners
 showAddBtn.addEventListener('click', () => {
   addForm.style.display = 'block';
   showAddBtn.style.display = 'none';
@@ -157,47 +114,89 @@ cancelAddBtn.addEventListener('click', () => {
   form.reset();
 });
 
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
+  const token = sessionStorage.getItem('sparkleAdminToken');
+  if (!token) {
+    alert('Please log in as admin to add a collection.');
+    window.location.href = 'login.html';
+    return;
+  }
+
   const name = document.getElementById('collection-name').value.trim();
   const description = document.getElementById('collection-description').value.trim();
   const image = document.getElementById('collection-image').value.trim();
   const video = document.getElementById('collection-video').value.trim();
-  if (name && description) {
-    collections.push({ name, description, image, video });
-    saveCollections();
-    renderCollections();
+
+  if (!name || !description) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/collections`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ name, description, image, video }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      alert(data.error || 'Could not add collection.');
+      return;
+    }
+
     addForm.style.display = 'none';
     showAddBtn.style.display = 'inline-block';
     form.reset();
+    await loadCollections();
+  } catch (err) {
+    alert('Could not reach the server. Is the backend running?');
   }
 });
 
-orderForm.addEventListener('submit', (e) => {
+orderForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!currentOrderItem) {
     return;
   }
 
-  const order = {
-    item: currentOrderItem.name,
+  const payload = {
+    collectionId: currentOrderItem.id,
+    itemName: currentOrderItem.name,
     name: document.getElementById('order-name').value.trim(),
     phone: document.getElementById('order-phone').value.trim(),
     reference: document.getElementById('order-reference').value.trim(),
     amount: document.getElementById('order-amount').value.trim(),
     address: document.getElementById('order-address').value.trim(),
-    timestamp: new Date().toISOString(),
   };
 
-  if (!order.name || !order.phone || !order.reference || !order.amount) {
+  if (!payload.name || !payload.phone || !payload.reference || !payload.amount) {
     alert('Please complete the order form before submitting.');
     return;
   }
 
-  saveOrder(order);
-  orderForm.style.display = 'none';
-  orderConfirmation.style.display = 'block';
-  currentOrderItem = null;
+  try {
+    const response = await fetch(`${API_BASE}/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      alert(data.error || 'Could not submit order. Please try again.');
+      return;
+    }
+
+    orderForm.style.display = 'none';
+    orderConfirmation.style.display = 'block';
+    currentOrderItem = null;
+  } catch (err) {
+    alert('Could not reach the server. Is the backend running?');
+  }
 });
 
 closeOrderModalBtn.addEventListener('click', closeOrderModal);
@@ -208,19 +207,17 @@ orderModal.addEventListener('click', (event) => {
   }
 });
 
-// Load collections
-fetch(collectionsFile)
-  .then((response) => {
+async function loadCollections() {
+  try {
+    const response = await fetch(`${API_BASE}/collections`);
     if (!response.ok) {
-      throw new Error('Could not load collections.json.');
+      throw new Error('Could not load collections.');
     }
-    return response.json();
-  })
-  .then((jsonCollections) => {
-    mergeCollections(jsonCollections);
+    collections = await response.json();
     renderCollections();
-  })
-  .catch(() => {
-    loadCollections();
-    renderCollections();
-  });
+  } catch (err) {
+    showError('Could not load collections. Is the backend running?');
+  }
+}
+
+loadCollections();

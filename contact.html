@@ -6,6 +6,7 @@
   <title>Contact — Sparkle & Slay</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="styles.css" />
+  <script src="config.js"></script>
 </head>
 <body>
   <!-- Splash Screen -->
@@ -80,10 +81,12 @@
         <h3>Stay in Touch</h3>
         <p>Get new arrivals, style updates, and exclusive offers delivered to your inbox.</p>
       </div>
-      <form class="contact-form">
-        <input type="email" placeholder="Your email address" aria-label="Your email address" required />
+      <form class="contact-form" id="newsletter-form">
+        <input type="email" id="newsletter-email" placeholder="Your email address" aria-label="Your email address" required />
         <button type="submit">Join the List</button>
       </form>
+      <p id="newsletter-status" class="page-note" style="display:none;"></p>
+    </section>
   </main>
 
   <footer class="site-footer">
@@ -128,6 +131,36 @@
         splashScreen.classList.add('hide');
       }
     }, 3000);
+
+    const newsletterForm = document.getElementById('newsletter-form');
+    const newsletterStatus = document.getElementById('newsletter-status');
+
+    newsletterForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('newsletter-email').value.trim();
+
+      newsletterStatus.style.display = 'none';
+
+      try {
+        const response = await fetch(`${API_BASE}/subscribe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          newsletterStatus.textContent = data.error || 'Could not subscribe. Please try again.';
+        } else {
+          newsletterStatus.textContent = "You're on the list! Thanks for joining.";
+          newsletterForm.reset();
+        }
+      } catch (err) {
+        newsletterStatus.textContent = 'Could not reach the server. Is the backend running?';
+      }
+
+      newsletterStatus.style.display = 'block';
+    });
   </script>
 </body>
 </html>

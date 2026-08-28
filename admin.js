@@ -3,13 +3,32 @@ const noCollections = document.getElementById('no-collections');
 const form = document.getElementById('admin-form');
 const logoutBtn = document.getElementById('logout-btn');
 
+const token = sessionStorage.getItem('sparkleAdminToken');
 let collections = [];
+let editingId = null;
+
+function authHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  };
+}
+
+function handleAuthFailure(response) {
+  if (response.status === 401) {
+    sessionStorage.removeItem('sparkleAdminToken');
+    alert('Your session has expired. Please log in again.');
+    window.location.href = 'login.html';
+    return true;
+  }
+  return false;
+}
 
 // Logout functionality
 logoutBtn.addEventListener('click', (e) => {
   e.preventDefault();
   if (confirm('Are you sure you want to logout?')) {
-    sessionStorage.removeItem('sparkleAdminSession');
+    sessionStorage.removeItem('sparkleAdminToken');
     window.location.href = 'login.html';
   }
 });
@@ -22,7 +41,7 @@ function renderAdminCollections() {
   }
 
   noCollections.style.display = 'none';
-  collections.forEach((item, index) => {
+  collections.forEach((item) => {
     const row = document.createElement('div');
     row.className = 'collection-row';
 
@@ -47,12 +66,12 @@ function renderAdminCollections() {
     const editBtn = document.createElement('button');
     editBtn.className = 'edit-button';
     editBtn.textContent = 'Edit';
-    editBtn.addEventListener('click', () => editCollection(index));
+    editBtn.addEventListener('click', () => editCollection(item));
 
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'delete-button';
     deleteBtn.textContent = 'Delete';
-    deleteBtn.addEventListener('click', () => deleteCollection(index));
+    deleteBtn.addEventListener('click', () => deleteCollection(item.id, item.name));
 
     actions.appendChild(editBtn);
     actions.appendChild(deleteBtn);
@@ -64,64 +83,90 @@ function renderAdminCollections() {
   });
 }
 
-function deleteCollection(index) {
-  if (confirm(`Delete "${collections[index].name}"?`)) {
-    collections.splice(index, 1);
-    saveToLocalStorage();
-    renderAdminCollections();
+async function deleteCollection(id, name) {
+  if (!confirm(`Delete "${name}"?`)) {
+    return;
   }
+
+  const response = await fetch(`${API_BASE}/collections/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+
+  if (handleAuthFailure(response)) return;
+
+  if (!response.ok && response.status !== 204) {
+    alert('Could not delete collection.');
+    return;
+  }
+
+  await loadCollections();
 }
 
-function editCollection(index) {
-  const item = collections[index];
+function editCollection(item) {
+  editingId = item.id;
   document.getElementById('admin-name').value = item.name;
   document.getElementById('admin-description').value = item.description;
   document.getElementById('admin-image').value = item.image || '';
   document.getElementById('admin-video').value = item.video || '';
-  
-  // Remove old item and reposition form
-  collections.splice(index, 1);
-  saveToLocalStorage();
-  renderAdminCollections();
-  
-  // Scroll to form
+  form.querySelector('button[type="submit"]').textContent = 'Save Changes';
   form.scrollIntoView({ behavior: 'smooth' });
 }
 
-function saveToLocalStorage() {
-  localStorage.setItem('sparkleCollections', JSON.stringify(collections));
-}
-
-function loadFromLocalStorage() {
-  const stored = localStorage.getItem('sparkleCollections');
-  if (stored) {
-    collections = JSON.parse(stored);
+async function loadCollections() {
+  try {
+    const response = await fetch(`${API_BASE}/collections`);
+    if (!response.ok) {
+      throw new Error('Could not load collections.');
+    }
+    collections = await response.json();
+    renderAdminCollections();
+  } catch (err) {
+    listEl.innerHTML = '<p>Could not load collections. Is the backend running?</p>';
   }
 }
 
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  
+
   const name = document.getElementById('admin-name').value.trim();
   const description = document.getElementById('admin-description').value.trim();
   const image = document.getElementById('admin-image').value.trim();
   const video = document.getElementById('admin-video').value.trim();
-  
-  if (name && description) {
-    collections.push({ 
-      name, 
-      description, 
-      image: image || '', 
-      video: video || '' 
+
+  if (!name || !description) {
+    return;
+  }
+
+  const payload = { name, description, image, video };
+  const isEditing = editingId !== null;
+  const url = isEditing ? `${API_BASE}/collections/${editingId}` : `${API_BASE}/collections`;
+  const method = isEditing ? 'PUT' : 'POST';
+
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
     });
-    
-    saveToLocalStorage();
-    renderAdminCollections();
+
+    if (handleAuthFailure(response)) return;
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      alert(data.error || 'Could not save collection.');
+      return;
+    }
+
+    editingId = null;
+    form.querySelector('button[type="submit"]').textContent = 'Add Collection';
     form.reset();
-    alert(`✓ "${name}" added successfully!`);
+    alert(`✓ "${name}" ${isEditing ? 'updated' : 'added'} successfully!`);
+    await loadCollections();
+  } catch (err) {
+    alert('Could not reach the server. Is the backend running?');
   }
 });
 
 // Initialize
-loadFromLocalStorage();
-renderAdminCollections();
+loadCollections();
