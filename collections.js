@@ -31,6 +31,12 @@ function formatPrice(value) {
     : 'Price on request';
 }
 
+function resolveMediaUrl(value) {
+  if (!value) return '';
+  if (value.startsWith('/uploads/')) return new URL(value, new URL(API_BASE).origin).href;
+  return value;
+}
+
 function getCartQuantity() {
   return cart.reduce((total, item) => total + item.quantity, 0);
 }
@@ -208,7 +214,7 @@ function renderCollections() {
 
     if (item.image) {
       const img = document.createElement('img');
-      img.src = item.image;
+      img.src = resolveMediaUrl(item.image);
       img.alt = item.name;
       img.onerror = () => img.style.display = 'none';
       mediaContainer.appendChild(img);
@@ -221,7 +227,7 @@ function renderCollections() {
       video.controls = true;
       video.style.marginTop = item.image ? '0.5rem' : '0';
       const source = document.createElement('source');
-      source.src = item.video;
+      source.src = resolveMediaUrl(item.video);
       source.type = 'video/mp4';
       video.appendChild(source);
       video.appendChild(document.createTextNode('Your browser does not support the video tag.'));
@@ -374,6 +380,11 @@ orderForm.addEventListener('submit', async (e) => {
     reference: document.getElementById('order-reference').value.trim(),
     amount: formatPrice(calculateCartTotals().total),
     address: document.getElementById('order-address').value.trim(),
+    items: currentOrderItems.map((item) => ({
+      collectionId: item.id,
+      name: item.name,
+      quantity: item.quantity,
+    })),
   };
 
   if (!payload.name || !payload.phone || !payload.reference || !payload.amount) {

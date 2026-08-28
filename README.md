@@ -1,9 +1,9 @@
 # Sparkle and Slay
 
-An online boutique website. The frontend is plain HTML, CSS, and JavaScript. There are two backend options, pick one:
+An online boutique website. The frontend is plain HTML, CSS, and JavaScript. The active local backend is the PHP/MySQL server:
 
-- server, a Node and Express app using PostgreSQL. Setup steps are below.
-- server-php, a plain PHP app using MySQL, built for shared hosting with no Composer step required. See server-php/README.md for full setup and how it maps to the Node version.
+- server-php, a plain PHP app using MySQL, built for shared hosting with no Composer step required. See server-php/README.md for full setup.
+- server, a Node and Express app using PostgreSQL, retained as an alternative backend.
 
 Either backend exposes the same routes, so the frontend does not care which one you run. You only need to point config.js at whichever one you choose.
 
@@ -15,40 +15,51 @@ Either backend exposes the same routes, so the frontend does not care which one 
 
 The frontend used to store everything in the browser using localStorage. It now talks to a real backend for collections, orders, newsletter signups, and admin login.
 
-## Node backend setup
+## PHP backend setup (active local backend)
 
-1. Install PostgreSQL if you do not already have it running.
-2. Create a database and a user for the app. Example commands using psql:
+1. Install PHP 8.1 or newer and enable the `pdo_mysql` extension. Confirm with:
 
-   CREATE USER sparkle_user WITH PASSWORD 'changeme';
-   CREATE DATABASE sparkle_slay OWNER sparkle_user;
+   php -v
+   php -m | findstr pdo_mysql
 
-3. From the server folder, copy the example environment file and fill in your own values:
+2. Create a MySQL database and user. Example commands using the MySQL client:
 
-   cp .env.example .env
+   CREATE DATABASE sparkle_slay;
+   CREATE USER 'sparkle_user'@'localhost' IDENTIFIED BY 'changeme';
+   GRANT ALL PRIVILEGES ON sparkle_slay.* TO 'sparkle_user'@'localhost';
+   FLUSH PRIVILEGES;
 
-   Set DATABASE_URL to match the user and database you created, and set JWT_SECRET to a long random string. Do not reuse the example values in production.
+3. From the `server-php` folder, copy the environment template and fill in the values:
 
-4. Install dependencies and run the migration:
+   Copy-Item .env.example .env
 
-   npm install
-   npm run migrate
+   Set `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, and `JWT_SECRET`. Do not reuse the example secret in production.
 
-5. Start the API:
+4. Run the migration. The database starts empty by design:
 
-   npm start
+   php migrate.php
 
-   The API listens on port 4000 by default and exposes routes under /api, including /api/health for a quick check.
+   This also creates the payment ledger used for EcoCash references and reports.
+
+5. Start the PHP API from `server-php`:
+
+   php -S localhost:4001 -t public public/index.php
+
+   The API exposes routes under `/api`, including `/api/health` for a quick check.
+
+## Node backend setup (alternative)
+
+The Node/PostgreSQL backend remains in `server/`. Follow its own environment, migration, and startup instructions if you choose it instead.
 
 ## Frontend setup
 
 The frontend is plain HTML, CSS, and JavaScript, so it just needs to be served as static files. From the project root:
 
-   python3 -m http.server 5500
+   python -m http.server 5500
 
 Then open http://localhost:5500 in your browser.
 
-The file config.js holds the API_BASE value the frontend uses to reach the backend. Update it if your backend runs somewhere other than http://localhost:4000/api.
+The file `config.js` holds the API URL and backend mode. The current PHP configuration uses `http://localhost:4001/api`.
 
 ## First time admin login
 
@@ -61,8 +72,10 @@ There is no admin account until you create one:
 
 From then on, login.html shows the normal login form instead of setup.
 
-## What still needs attention
+## Current notes
 
-- The photos and videos folders referenced across the pages are not included in this project yet and will be added once the marketing team uploads the real assets.
-- Cart and checkout beyond the manual Ecocash order form, product detail pages, and single page style routing are not built yet.
-- Deployment: the frontend can go to a static host such as Vercel or Netlify. The Node backend needs a host that can run Node and connect to a PostgreSQL database. The PHP backend in server-php is built for ordinary shared hosting with Apache and MySQL, which is often the cheaper and simpler option if you are not already paying for a Node friendly host.
+- The PHP database starts empty; add products through the admin panel after creating the first admin password.
+- The cart uses local browser storage and submits the existing manual EcoCash order form.
+- EcoCash checkout submissions create pending payment records. Verify or reject them from the Payments section of the admin workspace.
+- The EcoCash merchant number is managed in Admin > Settings and shown on checkout. Weekly and monthly payment reports can be printed from Admin > Payments.
+- Deployment: the frontend can go to a static host, while the PHP backend can run on Apache/shared hosting with MySQL.

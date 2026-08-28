@@ -1,0 +1,138 @@
+<?php
+
+require __DIR__ . '/../src/env.php';
+loadEnv(__DIR__ . '/../.env');
+
+require __DIR__ . '/../src/db.php';
+require __DIR__ . '/../src/jwt.php';
+require __DIR__ . '/../src/helpers.php';
+require __DIR__ . '/../src/routes/auth.php';
+require __DIR__ . '/../src/routes/collections.php';
+require __DIR__ . '/../src/routes/subscribe.php';
+require __DIR__ . '/../src/routes/orders.php';
+require __DIR__ . '/../src/routes/settings.php';
+require __DIR__ . '/../src/upload.php';
+require __DIR__ . '/../src/routes/payments.php';
+
+$origin = getenv('FRONTEND_ORIGIN') ?: '*';
+header("Access-Control-Allow-Origin: $origin");
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
+
+set_exception_handler(function (Throwable $e) {
+    error_log($e->getMessage());
+    jsonResponse(['error' => 'Something went wrong.'], 500);
+});
+
+$method = $_SERVER['REQUEST_METHOD'];
+$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+// Strip a leading /api so routes below read the same as the Node version.
+$path = preg_replace('#^/api#', '', rtrim($path, '/'));
+if ($path === '') {
+    $path = '/';
+}
+
+// Let the built-in server serve uploaded media files directly.
+if (in_array($method, ['GET', 'HEAD'], true) && $path !== '/' && is_file(__DIR__ . $path)) {
+    return false;
+}
+
+// --- Health check ---
+if ($method === 'GET' && $path === '/health') {
+    jsonResponse(['status' => 'ok']);
+}
+
+// --- Auth ---
+if ($method === 'GET' && $path === '/auth/status') {
+    authStatus();
+}
+if ($method === 'POST' && $path === '/auth/setup') {
+    authSetup();
+}
+if ($method === 'POST' && $path === '/auth/login') {
+    authLogin();
+}
+if ($method === 'PUT' && $path === '/auth/password') {
+    authChangePassword();
+}
+if ($method === 'POST' && $path === '/uploads') {
+    uploadMedia();
+}
+
+// --- Collections (and the /products alias) ---
+if (preg_match('#^/(collections|products)$#', $path, $m)) {
+    if ($method === 'GET') {
+        collectionsList();
+    }
+    if ($method === 'POST') {
+        collectionsCreate();
+    }
+}
+if (preg_match('#^/(collections|products)/(\d+)$#', $path, $m)) {
+    $id = $m[2];
+    if ($method === 'GET') {
+        collectionsGetOne($id);
+    }
+    if ($method === 'PUT') {
+        collectionsUpdate($id);
+    }
+    if ($method === 'DELETE') {
+        collectionsDelete($id);
+    }
+}
+
+// --- Subscribe ---
+if ($path === '/subscribe') {
+    if ($method === 'POST') {
+        subscribeCreate();
+    }
+    if ($method === 'GET') {
+        subscribeList();
+    }
+}
+
+// --- Orders ---
+if ($path === '/orders') {
+    if ($method === 'POST') {
+        ordersCreate();
+    }
+    if ($method === 'GET') {
+        ordersList();
+    }
+}
+if ($method === 'GET' && $path === '/orders/summary') {
+    ordersSummary();
+}
+if ($method === 'GET' && $path === '/payments') {
+    paymentsList();
+}
+if ($method === 'PUT' && preg_match('#^/payments/(\d+)/status$#', $path, $m)) {
+    paymentsUpdateStatus($m[1]);
+}
+if ($method === 'GET' && $path === '/payments/report') {
+    paymentsReport();
+}
+
+if ($path === '/settings') {
+    if ($method === 'GET') {
+        settingsGet();
+    }
+    if ($method === 'PUT') {
+        settingsUpdate();
+    }
+}
+if ($method === 'GET' && $path === '/settings/public') {
+    settingsPublicGet();
+}
+if (preg_match('#^/orders/(\d+)/status$#', $path, $m)) {
+    if ($method === 'PUT') {
+        ordersUpdateStatus($m[1]);
+    }
+}
+
+jsonResponse(['error' => 'Not found.'], 404);

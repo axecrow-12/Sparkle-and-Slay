@@ -3,165 +3,50 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Panel — Sparkle & Slay</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <title>Admin Workspace | Sparkle & Slay</title>
   <link rel="stylesheet" href="styles.css" />
   <script src="config.js"></script>
-  <script>
-    // Check authentication
-    if (!sessionStorage.getItem('sparkleAdminToken')) {
-      window.location.href = 'login.html';
-    }
-  </script>
-  <style>
-    .admin-container {
-      max-width: 900px;
-      margin: 0 auto;
-    }
-    .admin-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-    }
-    .form-section {
-      grid-column: 1 / -1;
-    }
-    .collections-list {
-      grid-column: 1 / -1;
-    }
-    .collection-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr auto;
-      gap: 1rem;
-      padding: 1rem;
-      border: 1px solid #e6e6e6;
-      border-radius: 12px;
-      margin-bottom: 1rem;
-      align-items: center;
-    }
-    .collection-row small {
-      color: #666;
-    }
-    .action-buttons {
-      display: flex;
-      gap: 0.5rem;
-    }
-    .edit-button, .delete-button {
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
-    .edit-button {
-      background: #0f9d58;
-      color: white;
-    }
-    .delete-button {
-      background: #dc3545;
-      color: white;
-    }
-    .info-box {
-      background: #e7f5f2;
-      border: 1px solid #0f9d58;
-      border-radius: 12px;
-      padding: 1.2rem;
-      margin-bottom: 1.5rem;
-      color: #0a5e3d;
-    }
-    .copy-btn {
-      background: var(--dark);
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
-  </style>
+  <script>if (!sessionStorage.getItem('sparkleAdminToken')) window.location.href = 'login.html';</script>
 </head>
-<body>
-  <header class="site-header has-video">
-    <video autoplay muted loop playsinline preload="auto" class="header-video" id="headerVideo">
-      <source src="videos/Elegant Wear.mp4" type="video/mp4">
-    </video>
-    <div class="brand">
-      <img src="photos/A5ecfa8534cd84b8c9e91661fcf73dfc0C-removebg-preview.png" alt="Sparkle & Slay logo" class="logo" onerror="this.onerror=null;this.src='photos/slay.jpeg'" />
-      <div>
-        <h1>Admin Panel</h1>
-        <p>Manage collections and store</p>
-      </div>
+<body class="admin-page">
+  <div class="admin-shell">
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="admin-brand"><img src="photos/A5ecfa8534cd84b8c9e91661fcf73dfc0C-removebg-preview.png" alt="Sparkle & Slay logo" onerror="this.onerror=null;this.src='photos/slay.jpeg'" /><div><strong>Sparkle & Slay</strong><span>Owner workspace</span></div></div>
+      <nav class="admin-nav" aria-label="Admin sections">
+        <button class="admin-nav-link is-active" type="button" data-view="dashboard" aria-current="page"><img src="photos/chart-no-axes-combined.svg" alt="" aria-hidden="true" /><span>Dashboard</span></button>
+        <button class="admin-nav-link" type="button" data-view="shop"><img src="photos/folder-kanban.svg" alt="" aria-hidden="true" /><span>Shop management</span></button>
+        <button class="admin-nav-link" type="button" data-view="payments"><img src="photos/credit-card.svg" alt="" aria-hidden="true" /><span>Payments</span></button>
+        <button class="admin-nav-link" type="button" data-view="settings"><img src="photos/settings.svg" alt="" aria-hidden="true" /><span>Settings</span></button>
+      </nav>
+      <div class="admin-sidebar-footer"><a class="admin-store-link" href="index.html" target="_blank" rel="noopener"><img src="photos/shopping-cart.svg" alt="" aria-hidden="true" /><span>View storefront</span></a><button class="admin-logout" type="button" id="logout-btn">Log out</button></div>
+    </aside>
+
+    <div class="admin-main-wrap">
+      <header class="admin-topbar"><button class="admin-menu-toggle" type="button" id="menu-toggle" aria-controls="admin-sidebar" aria-expanded="false"><span></span><span></span><span></span><span class="sr-only">Open navigation</span></button><div><p class="admin-kicker">Store operations</p><h1 id="page-title">Dashboard</h1></div><div class="admin-topbar-meta"><span class="status-dot"></span><span>Workspace live</span></div></header>
+      <main class="admin-main">
+        <section class="admin-view is-active" id="view-dashboard" data-view-panel="dashboard" aria-labelledby="page-title">
+          <div class="admin-intro"><div><p class="admin-kicker">Good to see you</p><h2>Keep the collection moving.</h2><p class="admin-muted">A quick read on your shop performance and the pieces customers are choosing most.</p></div><button class="primary-button" type="button" data-open-view="shop">Add a product</button></div>
+          <div class="metric-grid" id="dashboard-metrics"><article class="metric-card"><span>Products</span><strong id="metric-products">—</strong><small>in your shop</small></article><article class="metric-card"><span>Units sold</span><strong id="metric-units">—</strong><small>all-time quantity</small></article><article class="metric-card"><span>Pending orders</span><strong id="metric-orders">—</strong><small>awaiting action</small></article></div>
+          <div class="dashboard-grid"><section class="workspace-panel trend-panel"><div class="panel-heading"><div><p class="admin-kicker">Sales insight</p><h3>Most bought items</h3></div><span class="panel-period">All time</span></div><div id="trend-list" class="trend-list"><p class="admin-muted">Loading sales insight...</p></div></section><section class="workspace-panel activity-panel"><div class="panel-heading"><div><p class="admin-kicker">Inventory pulse</p><h3>Shop snapshot</h3></div></div><div id="inventory-summary" class="inventory-summary"><p class="admin-muted">Loading inventory...</p></div></section></div>
+        </section>
+
+        <section class="admin-view" id="view-shop" data-view-panel="shop" aria-labelledby="shop-title" hidden>
+          <div class="admin-intro"><div><p class="admin-kicker">Catalog</p><h2 id="shop-title">Shop management</h2><p class="admin-muted">Update prices, availability, and the pieces customers see in your storefront.</p></div><button class="primary-button" type="button" id="new-product-btn">New product</button></div>
+          <div class="workspace-panel form-section" id="product-form-panel" hidden><div class="panel-heading"><div><p class="admin-kicker">Catalog editor</p><h3 id="product-form-title">Add a product</h3></div></div><form id="admin-form" class="admin-product-form"><label>Product name<input type="text" id="admin-name" placeholder="e.g. Satin evening dress" required /></label><label>Description<textarea id="admin-description" placeholder="Describe the fit, fabric, and occasion" required></textarea></label><div class="form-grid"><label>Price (USD)<input type="number" id="admin-price" min="0" step="0.01" required /></label><label>Availability<select id="admin-stock-status"><option value="in_stock">In stock</option><option value="low_stock">Low stock</option><option value="out_of_stock">Out of stock</option></select></label></div><div class="form-grid"><label>Image path or URL<input type="text" id="admin-image" placeholder="photos/product.jpg" /><input type="file" id="admin-image-file" accept="image/jpeg,image/png,image/webp" /></label><label>Video path or URL<input type="text" id="admin-video" placeholder="Optional product video" /><input type="file" id="admin-video-file" accept="video/mp4,video/webm" /></label></div><div class="form-actions"><button class="primary-button" type="submit">Add product</button><button class="secondary-button" type="button" id="cancel-product">Cancel</button></div></form></div>
+          <div class="workspace-panel products-panel"><div class="panel-heading"><div><p class="admin-kicker">Your catalog</p><h3>Products</h3></div><span id="product-count" class="panel-period">Loading</span></div><div id="admin-list" class="product-list"></div><div id="no-collections" class="empty-state" hidden><strong>No products yet</strong><p>Add your first product to start building the storefront.</p></div></div>
+        </section>
+
+        <section class="admin-view" id="view-payments" data-view-panel="payments" aria-labelledby="payments-title" hidden>
+          <div class="admin-intro"><div><p class="admin-kicker">EcoCash ledger</p><h2 id="payments-title">Payments</h2><p class="admin-muted">Review submitted references, confirm payments, and print sales reports.</p></div><div class="report-actions"><select id="report-period" aria-label="Report period"><option value="weekly">Weekly report</option><option value="monthly">Monthly report</option></select><button class="secondary-button" type="button" id="load-report">Load report</button><button class="primary-button" type="button" id="print-report">Print report</button></div></div>
+          <section class="workspace-panel report-panel" id="payment-report"><div class="panel-heading"><div><p class="admin-kicker">Sales report</p><h3 id="report-title">Weekly payments</h3></div><span id="report-total" class="panel-period">Loading</span></div><div id="report-table" class="report-table"><p class="admin-muted">Choose a period to load a report.</p></div></section>
+          <section class="workspace-panel payments-panel"><div class="panel-heading"><div><p class="admin-kicker">Payment records</p><h3>Recent EcoCash submissions</h3></div><span id="payment-count" class="panel-period">Loading</span></div><div id="payment-list" class="payment-list"><p class="admin-muted">Loading payments...</p></div></section>
+        </section>
+
+        <section class="admin-view" id="view-settings" data-view-panel="settings" aria-labelledby="settings-title" hidden><div class="admin-intro"><div><p class="admin-kicker">Workspace preferences</p><h2 id="settings-title">Settings</h2><p class="admin-muted">Keep your account secure and your storefront details current.</p></div></div><div class="settings-grid"><section class="workspace-panel"><div class="panel-heading"><div><p class="admin-kicker">Public storefront</p><h3>Store details</h3></div></div><form id="store-settings-form" class="settings-form"><label>Store name<input id="setting-store-name" type="text" value="Sparkle & Slay" required /></label><label>Email<input id="setting-email" type="email" value="sales@sparkleandslay.com" required /></label><label>Phone<input id="setting-phone" type="tel" value="+263 77 659 3476" /></label><label>WhatsApp number<input id="setting-whatsapp" type="tel" value="+263776593476" /></label><label>EcoCash merchant number<input id="setting-ecocash" type="tel" value="0783 123 456" required /></label><label>Address<textarea id="setting-address">Corner Robert and Angwa, NiceWear Mall Shop 2, Harare, Zimbabwe</textarea></label><button class="primary-button" type="submit">Save store details</button></form></section><section class="workspace-panel"><div class="panel-heading"><div><p class="admin-kicker">Account security</p><h3>Change password</h3></div></div><form id="password-form" class="settings-form"><label>Current password<input id="current-password" type="password" required /></label><label>New password<input id="new-password" type="password" minlength="8" required /></label><label>Confirm new password<input id="confirm-password" type="password" minlength="8" required /></label><button class="secondary-button" type="submit">Update password</button></form></section></div></section>
+      </main>
     </div>
-    <nav class="nav-links">
-      <a href="index.html">View Site</a>
-      <a href="collection.html">Collections</a>
-      <a href="#" id="logout-btn" style="color: #dc3545; font-weight: 700;">Logout</a>
-    </nav>
-  </header>
-
-  <main>
-    <section class="section-light admin-container">
-      <div class="info-box">
-        <p><strong>Welcome, Owner!</strong> Use this admin panel to add, edit, or remove collections from your device. All changes are saved automatically.</p>
-      </div>
-
-      <div class="form-section">
-        <h3>Add New Collection</h3>
-        <form id="admin-form" class="add-form">
-          <input type="text" id="admin-name" placeholder="Collection Name" required />
-          <textarea id="admin-description" placeholder="Description" required></textarea>
-          <input type="number" id="admin-price" placeholder="Price (USD)" min="0" step="0.01" required />
-          <input type="url" id="admin-image" placeholder="Image URL (e.g., photos/image.jpg)" />
-          <input type="url" id="admin-video" placeholder="Video URL (e.g., https://example.com/video.mp4)" />
-          <button type="submit">Add Collection</button>
-        </form>
-      </div>
-
-      <div class="collections-list">
-        <h3>Your Collections</h3>
-        <div id="admin-list"></div>
-        <div id="no-collections" class="page-note" style="display:none;">
-          <p>No collections yet. Add your first collection above!</p>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <p>&copy; 2026 Sparkle & Slay. Admin Panel.</p>
-  </footer>
-
+  </div>
+  <div class="mobile-sidebar-backdrop" id="sidebar-backdrop" hidden></div>
   <script src="admin.js"></script>
-  <footer class="site-footer">
-    <div class="footer-content">
-      <div class="footer-section">
-        <h4>Contact Us</h4>
-        <p><strong>Email:</strong> <a href="mailto:sales@sparkleandslay.com">sales@sparkleandslay.com</a></p>
-        <p><strong>Phone:</strong> <a href="tel:+263776593476">+263 77 659 3476</a></p>
-        <p><strong>WhatsApp:</strong> <a href="https://wa.me/263776593476" target="_blank" rel="noopener">Chat with us</a></p>
-      </div>
-      <div class="footer-section">
-        <h4>Visit Us</h4>
-        <p>Corner Robert and Angwa<br>NiceWear Mall Shop 2<br>Harare, Zimbabwe</p>
-      </div>
-      <div class="footer-section">
-        <h4>Follow Us</h4>
-        <div class="social-links-footer">
-          <a href="https://facebook.com/sparkleandslay" target="_blank" rel="noopener" title="Facebook"><i class="fab fa-facebook"></i></a>
-          <a href="https://instagram.com/sparkleandslay" target="_blank" rel="noopener" title="Instagram"><i class="fab fa-instagram"></i></a>
-          <a href="https://tiktok.com/@sparkleandslay" target="_blank" rel="noopener" title="TikTok"><i class="fab fa-tiktok"></i></a>
-        </div>
-      </div>
-      <div class="footer-section">
-        <h4>Quick Links</h4>
-        <div class="footer-links">
-          <a href="index.html">Home</a>
-          <a href="collection.html">Collections</a>
-          <a href="contact.html">Contact</a>
-        </div>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>&copy; 2026 Sparkle & Slay. All rights reserved.</p>
-    </div>
-  </footer>
+</body>
+</html>

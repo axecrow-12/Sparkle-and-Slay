@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="styles.css" />
   <script src="config.js"></script>
+  <script src="public-settings.js"></script>
 </head>
 <body class="collection-page">
   <!-- Splash Screen -->
@@ -114,7 +115,7 @@
           <button id="close-order-modal" class="modal-close" aria-label="Close order form">&times;</button>
           <h4 id="order-modal-title">Order with Ecocash</h4>
           <p id="order-item-name">Selected item:</p>
-          <p class="order-note">Pay using Ecocash merchant number <strong>0783 123 456</strong>. Enter your payment reference and delivery details below.</p>
+          <p class="order-note">Pay using Ecocash merchant number <strong data-setting-text="ecocash_merchant_number">0783 123 456</strong>. Enter your payment reference and delivery details below.</p>
 
           <form id="order-form">
             <label>
@@ -144,7 +145,7 @@
           </form>
 
           <div id="order-confirmation" class="page-note" style="display:none;">
-            <p>Thanks! Your order request has been submitted. Please pay using Ecocash merchant <strong>0783 123 456</strong> and keep your reference safe.</p>
+            <p>Thanks! Your order request has been submitted. Please pay using Ecocash merchant <strong data-setting-text="ecocash_merchant_number">0783 123 456</strong> and keep your reference safe.</p>
             <p>You can also email the order details to <a href="mailto:orders@sparkleandslay.com">orders@sparkleandslay.com</a> for faster processing.</p>
           </div>
         </div>
