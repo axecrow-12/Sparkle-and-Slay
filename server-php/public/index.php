@@ -6,6 +6,7 @@ loadEnv(__DIR__ . '/../.env');
 require __DIR__ . '/../src/db.php';
 require __DIR__ . '/../src/jwt.php';
 require __DIR__ . '/../src/helpers.php';
+require __DIR__ . '/../src/rateLimiter.php';
 require __DIR__ . '/../src/routes/auth.php';
 require __DIR__ . '/../src/routes/collections.php';
 require __DIR__ . '/../src/routes/subscribe.php';
@@ -14,7 +15,6 @@ require __DIR__ . '/../src/routes/settings.php';
 require __DIR__ . '/../src/upload.php';
 require __DIR__ . '/../src/routes/payments.php';
 require __DIR__ . '/../src/routes/ecocash.php';
-require __DIR__ . '/../src/rateLimiter.php';
 
 $origin = getenv('FRONTEND_ORIGIN') ?: '*';
 header("Access-Control-Allow-Origin: $origin");

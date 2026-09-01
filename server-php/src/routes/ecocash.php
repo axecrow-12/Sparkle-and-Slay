@@ -84,20 +84,18 @@ function ecocashApiRequest(string $method, string $url, ?array $payload = null):
     $error = curl_error($curl);
     curl_close($curl);
     $decoded = is_string($response) ? json_decode($response, true) : null;
-
     if ($error) {
         error_log("EcoCash API Error ($method $url): $error");
         throw new RuntimeException('EcoCash API connection failed: ' . $error);
     }
     if ($status < 200 || $status >= 300) {
-        error_log("EcoCash API HTTP $status ($method $url): " . substr((string) $response, 0, 200));
+        error_log("EcoCash API HTTP $status ($method $url): " . substr((string)$response, 0, 200));
         throw new RuntimeException("EcoCash API returned HTTP $status");
     }
     if (!is_array($decoded)) {
-        error_log('EcoCash API Invalid JSON: ' . substr((string) $response, 0, 200));
+        error_log('EcoCash API Invalid JSON: ' . substr((string)$response, 0, 200));
         throw new RuntimeException('EcoCash API returned invalid JSON');
     }
-
     return $decoded;
 }
 

@@ -3,7 +3,7 @@
 /**
  * Returns the connecting client's IP address.
  *
- * REMOTE_ADDR is set by PHP's built-in server or Apache based on the actual
+ * REMOTE_ADDR is set by PHP's built in server or Apache based on the actual
  * TCP connection, so it cannot be spoofed by a request header. If this app
  * ever sits behind a reverse proxy or load balancer, this needs to read a
  * trusted forwarded header set by that proxy instead. Never trust an

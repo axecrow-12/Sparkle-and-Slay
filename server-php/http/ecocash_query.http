@@ -1,0 +1,100 @@
+### Select the "preprod" environment from the dropdown in the top right of
+### this editor before running any of these (PHPStorm reads variables from
+### http-client.env.json and http-client.private.env.json automatically).
+###
+### Run requests in order, top to bottom. Request 1 stores the
+### clientCorrelator it used into a global variable, request 2 reuses it,
+### so they are meant to be run in sequence, not independently.
+
+
+### 1. Charge request against EcoCash preprod
+# This confirms Basic Auth is wired correctly and gives us a real
+# clientCorrelator to query in request 2. Expect this to fail with a
+# subscriber related error unless testEndUserId has actually been
+# registered with EcoCash's test environment (see the doc: you have to
+# email the EcoCash point of contact to get a number added). A 401 here
+# means the auth itself is wrong, anything else means auth passed and
+# the failure is about the test number, which is fine for this test.
+POST {{ecocashChargeUrl}}
+Content-Type: application/json
+Authorization: Basic {{ecocashUsername}} {{ecocashPassword}}
+
+{
+  "clientCorrelator": "{{$timestamp}}",
+  "notifyUrl": "http://localhost:4001/api/ecocash/notify",
+  "referenceCode": "TEST_{{$timestamp}}",
+  "tranType": "MER",
+  "endUserId": "{{testEndUserId}}",
+  "remarks": "PHPStorm isolation test",
+  "transactionOperationStatus": "Charged",
+  "paymentAmount": {
+    "charginginformation": {
+      "amount": 1.00,
+      "currency": "USD",
+      "description": "Sparkle and Slay test charge"
+    },
+    "chargeMetaData": {
+      "channel": "WEB",
+      "purchaseCategoryCode": "Online Payment",
+      "onBeHalfOf": "Sparkle and Slay"
+    }
+  },
+  "merchantCode": "{{testMerchantCode}}",
+  "merchantPin": "{{testMerchantPin}}",
+  "merchantNumber": "{{testMerchantNumber}}",
+  "currencyCode": "USD",
+  "countryCode": "ZW",
+  "terminalID": "WEB",
+  "location": "Online",
+  "superMerchantName": "Sparkle and Slay",
+  "merchantName": "Sparkle and Slay"
+}
+
+> {%
+    client.test("Auth accepted, not a 401", function () {
+        client.assert(response.status !== 401, "Got 401, Basic Auth header is wrong");
+    });
+    client.test("Response is JSON", function () {
+        client.assert(response.body.hasOwnProperty("clientCorrelator"), "Response did not look like an EcoCash payload");
+    });
+
+    // Save the correlator we just used so request 2 can query the same
+    // transaction without you having to copy and paste anything.
+    if (response.body.clientCorrelator) {
+        client.global.set("lastClientCorrelator", response.body.clientCorrelator);
+    }
+%}
+
+
+### 2. Query the transaction we just created
+# This is the exact call ecocashQueryTransaction() makes in ecocash.php.
+# Testing it here in isolation confirms the URL shape, the endUserId
+# encoding, and the Basic Auth all work before trusting it inside the
+# real notify handler.
+GET {{ecocashQueryBaseUrl}}/{{testEndUserId}}/transactions/amount/{{lastClientCorrelator}}
+Authorization: Basic {{ecocashUsername}} {{ecocashPassword}}
+
+> {%
+    client.test("Auth accepted, not a 401", function () {
+        client.assert(response.status !== 401, "Got 401, Basic Auth header is wrong");
+    });
+    client.test("Has a transactionOperationStatus", function () {
+        client.assert(response.body.hasOwnProperty("transactionOperationStatus"), "Missing transactionOperationStatus in response");
+    });
+    client.log("Transaction status: " + response.body.transactionOperationStatus);
+%}
+
+
+### 3. Query a specific known transaction by hand
+# Use this once you have a real clientCorrelator from an actual test
+# charge (from EcoCash's own dashboard, a teammate's test, or a prior
+# run of request 1). Replace the value below directly, this one does not
+# rely on the chained global variable.
+GET {{ecocashQueryBaseUrl}}/{{testEndUserId}}/transactions/amount/REPLACE_WITH_A_REAL_CORRELATOR
+Authorization: Basic {{ecocashUsername}} {{ecocashPassword}}
+
+
+### 4. Sanity check our own PHP backend is up
+# Not an EcoCash call, just confirms php -S localhost:4001 -t public
+# public/index.php is actually running before you debug anything else.
+GET {{localApiBaseUrl}}/health
