@@ -6,7 +6,7 @@ It exposes the same routes as the Node backend, so the frontend files (config.js
 
 ## Requirements
 
-- PHP 8.1 or newer, with the pdo_mysql extension
+- PHP 8.1 or newer, with the pdo_mysql and cURL extensions
 - MySQL or MariaDB
 - Apache with mod_rewrite, or an equivalent that can route unmatched requests to index.php
 
@@ -33,7 +33,7 @@ On Windows with Laravel Herd, close and reopen PowerShell after installation so 
 
    php migrate.php
 
-   This also applies the idempotent payment ledger migration in `migrations/002_payments.sql`.
+   This applies the payment ledger and EcoCash API checkout migrations.
 
 4. For local testing, PHP has a built-in server on port 4001:
 
@@ -59,5 +59,9 @@ Open http://localhost:5500 after both servers are running.
 
 - Most shared hosting exposes phpMyAdmin or a control panel database tool instead of a command line MySQL, so you can also paste migrations/001_init.sql into that tool instead of running php migrate.php over SSH.
 - Keep .env out of the public folder. This project already keeps it one level above public, which is the safer place for it.
-- EcoCash payments are recorded in `payments` when an order is submitted, with pending, verified, or rejected status. The merchant number used at checkout is stored with each record.
+- Customers can use either the existing manual EcoCash reference form or automated EcoCash checkout. Automated checkout recalculates the cart total on the server, sends the payment request to EcoCash, and records the transaction in `payments`.
+- Automated checkout requires the EcoCash values in `.env.example` to be copied into `.env`. Keep the username, password, merchant PIN, merchant code, and merchant number server-side; never put them in frontend files or Admin Settings. The sample values are placeholders and must be replaced locally.
+- Set `ECOCASH_NOTIFY_URL` to a public HTTPS URL ending in `/api/ecocash/notify`. EcoCash sends the final `COMPLETED` or `FAILED` notification there. Localhost is not reachable by EcoCash; use a secure tunnel or a deployed pre-production callback when testing.
+- Set `ECOCASH_API_URL` to the pre-production endpoint while testing, then change it to the production endpoint only after a successful test transaction. The current integration sends the documented JSON contract and stores provider references and statuses in `payments`.
+- Automated checkout calculates the product subtotal plus the existing 1.3% EcoCash and 2% IMTT fees. The cart is cleared only after EcoCash confirms completion.
 - The admin Payments view provides weekly and monthly reports and uses the browser print dialog. Reports use the PHP/MySQL server local time for calendar boundaries.

@@ -4,8 +4,34 @@ const form = document.getElementById('admin-form');
 const formPanel = document.getElementById('product-form-panel');
 const logoutBtn = document.getElementById('logout-btn');
 const token = sessionStorage.getItem('sparkleAdminToken');
+const adminStatus = document.getElementById('admin-status');
 let collections = [];
 let editingId = null;
+
+function showStatus(message, type = 'info') {
+  SparkleUI.announce(adminStatus, message, type);
+}
+
+function clearMediaPreviews() {
+  ['admin-image-preview', 'admin-video-preview'].forEach((id) => {
+    const preview = document.getElementById(id);
+    preview.hidden = true;
+    preview.removeAttribute('src');
+  });
+}
+
+function previewSelectedFile(inputId, previewId) {
+  const input = document.getElementById(inputId);
+  const preview = document.getElementById(previewId);
+  const file = input.files[0];
+  if (!file) {
+    preview.hidden = true;
+    preview.removeAttribute('src');
+    return;
+  }
+  preview.src = URL.createObjectURL(file);
+  preview.hidden = false;
+}
 
 function authHeaders() {
   return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
@@ -71,17 +97,25 @@ function openProductForm(item = null) {
   document.getElementById('admin-stock-status').value = item?.stock_status || 'in_stock';
   document.getElementById('admin-image').value = item?.image || '';
   document.getElementById('admin-video').value = item?.video || '';
+  document.getElementById('admin-colors').value = item?.colors || '';
+  document.getElementById('admin-sizes').value = item?.sizes || '';
+  document.getElementById('admin-rating-average').value = item?.rating_average ?? '';
+  document.getElementById('admin-rating-count').value = item?.rating_count ?? '';
+  clearMediaPreviews();
   formPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function closeProductForm() {
   editingId = null;
   form.reset();
+  clearMediaPreviews();
   formPanel.hidden = true;
 }
 
 document.getElementById('new-product-btn').addEventListener('click', () => openProductForm());
 document.getElementById('cancel-product').addEventListener('click', closeProductForm);
+document.getElementById('admin-image-file').addEventListener('change', () => previewSelectedFile('admin-image-file', 'admin-image-preview'));
+document.getElementById('admin-video-file').addEventListener('change', () => previewSelectedFile('admin-video-file', 'admin-video-preview'));
 
 const settingFields = {
   store_name: 'setting-store-name', email: 'setting-email', phone: 'setting-phone',
@@ -102,22 +136,38 @@ async function loadSettings() {
 document.getElementById('store-settings-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const payload = Object.fromEntries(Object.entries(settingFields).map(([key, id]) => [key, document.getElementById(id).value.trim()]));
-  const response = await fetch(`${API_BASE}/settings`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
-  if (handleAuthFailure(response)) return;
-  alert(response.ok ? 'Store details saved.' : 'Could not save store details.');
+  const button = event.currentTarget.querySelector('button[type="submit"]');
+  SparkleUI.setBusy(button, true, 'Saving...');
+  try {
+    const response = await fetch(`${API_BASE}/settings`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
+    if (handleAuthFailure(response)) return;
+    showStatus(response.ok ? 'Store details saved.' : 'Could not save store details.', response.ok ? 'success' : 'error');
+  } catch (error) {
+    showStatus('Could not reach the server. Please try again shortly.', 'error');
+  } finally {
+    SparkleUI.setBusy(button, false);
+  }
 });
 
 document.getElementById('password-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const next = document.getElementById('new-password').value;
-  if (next !== document.getElementById('confirm-password').value) { alert('New passwords do not match.'); return; }
-  const response = await fetch(`${API_BASE}/auth/password`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ currentPassword: document.getElementById('current-password').value, newPassword: next }) });
-  if (handleAuthFailure(response)) return;
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) { alert(data.error || 'Could not update password.'); return; }
-  sessionStorage.setItem('sparkleAdminToken', data.token);
-  document.getElementById('password-form').reset();
-  alert('Password updated.');
+  if (next !== document.getElementById('confirm-password').value) { showStatus('New passwords do not match.', 'error'); return; }
+  const button = event.currentTarget.querySelector('button[type="submit"]');
+  SparkleUI.setBusy(button, true, 'Updating...');
+  try {
+    const response = await fetch(`${API_BASE}/auth/password`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ currentPassword: document.getElementById('current-password').value, newPassword: next }) });
+    if (handleAuthFailure(response)) return;
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) { showStatus(data.error || 'Could not update password.', 'error'); return; }
+    sessionStorage.setItem('sparkleAdminToken', data.token);
+    document.getElementById('password-form').reset();
+    showStatus('Password updated.', 'success');
+  } catch (error) {
+    showStatus('Could not reach the server. Please try again shortly.', 'error');
+  } finally {
+    SparkleUI.setBusy(button, false);
+  }
 });
 
 function makeSmall(text) {
@@ -248,7 +298,8 @@ async function loadPayments() {
 
 async function updatePaymentStatus(id, status) {
   const response = await fetch(`${API_BASE}/payments/${id}/status`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ status }) });
-  if (handleAuthFailure(response) || !response.ok) { alert('Could not update payment status.'); loadPayments(); }
+  if (handleAuthFailure(response) || !response.ok) { showStatus('Could not update payment status.', 'error'); loadPayments(); return; }
+  showStatus('Payment status updated.', 'success');
 }
 
 async function loadPaymentReport() {
@@ -307,23 +358,41 @@ form.addEventListener('submit', async (event) => {
   const name = document.getElementById('admin-name').value.trim();
   const description = document.getElementById('admin-description').value.trim();
   const price = Number(document.getElementById('admin-price').value);
-  if (!name || !description || !Number.isFinite(price) || price < 0) return;
+  const requiredInputs = ['admin-name', 'admin-description', 'admin-price'].map((id) => document.getElementById(id));
+  if (!SparkleUI.validateRequired(requiredInputs) || !Number.isFinite(price) || price < 0) return;
   let image = document.getElementById('admin-image').value.trim();
   let video = document.getElementById('admin-video').value.trim();
+  const button = form.querySelector('button[type="submit"]');
+  SparkleUI.setBusy(button, true, editingId !== null ? 'Saving...' : 'Adding...');
   try {
     image = await uploadSelectedFile('admin-image-file') || image;
     video = await uploadSelectedFile('admin-video-file') || video;
   } catch (error) {
-    alert(error.message);
+    showStatus(error.message, 'error');
+    SparkleUI.setBusy(button, false);
     return;
   }
-  const payload = { name, description, image, video, price, stock_status: document.getElementById('admin-stock-status').value };
+  const payload = {
+    name, description, image, video, price,
+    stock_status: document.getElementById('admin-stock-status').value,
+    colors: document.getElementById('admin-colors').value.trim(),
+    sizes: document.getElementById('admin-sizes').value.trim(),
+    rating_average: document.getElementById('admin-rating-average').value === '' ? null : Number(document.getElementById('admin-rating-average').value),
+    rating_count: document.getElementById('admin-rating-count').value === '' ? 0 : Number(document.getElementById('admin-rating-count').value),
+  };
   const isEditing = editingId !== null;
-  const response = await fetch(isEditing ? `${API_BASE}/collections/${editingId}` : `${API_BASE}/collections`, { method: isEditing ? 'PUT' : 'POST', headers: authHeaders(), body: JSON.stringify(payload) });
-  if (handleAuthFailure(response)) return;
-  if (!response.ok) { const data = await response.json().catch(() => ({})); alert(data.error || 'Could not save product.'); return; }
-  closeProductForm();
-  await loadCollections();
+  try {
+    const response = await fetch(isEditing ? `${API_BASE}/collections/${editingId}` : `${API_BASE}/collections`, { method: isEditing ? 'PUT' : 'POST', headers: authHeaders(), body: JSON.stringify(payload) });
+    if (handleAuthFailure(response)) return;
+    if (!response.ok) { const data = await response.json().catch(() => ({})); showStatus(data.error || 'Could not save product.', 'error'); return; }
+    closeProductForm();
+    await loadCollections();
+    showStatus(isEditing ? 'Product updated.' : 'Product added.', 'success');
+  } catch (error) {
+    showStatus('Could not reach the server. Please try again shortly.', 'error');
+  } finally {
+    SparkleUI.setBusy(button, false);
+  }
 });
 
 loadCollections();

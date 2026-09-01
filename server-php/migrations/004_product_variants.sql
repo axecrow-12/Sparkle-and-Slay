@@ -1,0 +1,5 @@
+ALTER TABLE collections
+  ADD COLUMN colors VARCHAR(500) NOT NULL DEFAULT '' AFTER stock_status,
+  ADD COLUMN sizes VARCHAR(500) NOT NULL DEFAULT '' AFTER colors,
+  ADD COLUMN rating_average DECIMAL(2,1) NULL AFTER sizes,
+  ADD COLUMN rating_count INT UNSIGNED NOT NULL DEFAULT 0 AFTER rating_average;

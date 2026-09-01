@@ -10,6 +10,7 @@
   <script src="public-settings.js"></script>
 </head>
 <body class="collection-page">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <!-- Splash Screen -->
   <div class="splash-screen" id="splashScreen">
     <div class="splash-content">
@@ -23,32 +24,53 @@
     </div>
   </div>
 
-  <header class="site-header has-video">
-    <video autoplay muted loop playsinline preload="auto" class="header-video" id="headerVideo">
-      <source src="videos/Elegant Wear.mp4" type="video/mp4">
-    </video>
-    <div class="brand">
-      <img src="photos/A5ecfa8534cd84b8c9e91661fcf73dfc0C-removebg-preview.png" alt="Sparkle & Slay logo" class="logo" onerror="this.onerror=null;this.src='photos/slay.jpeg'" />
-      <div>
-        <h1>Shop</h1>
-        <p>Fresh styles, ready to wear</p>
+  <div class="shop-topbar">Free delivery on EcoCash orders over $50 in Harare</div>
+
+  <header class="shop-header">
+    <div class="shop-header-inner">
+      <button class="shop-menu-toggle" type="button" id="shop-menu-toggle" aria-controls="shop-nav" aria-expanded="false">
+        <span></span><span></span><span></span>
+        <span class="sr-only">Open menu</span>
+      </button>
+      <a class="shop-brand" href="index.html">
+        <img src="photos/A5ecfa8534cd84b8c9e91661fcf73dfc0C-removebg-preview.png" alt="Sparkle & Slay logo" class="logo" onerror="this.onerror=null;this.src='photos/slay.jpeg'" />
+        <span>Sparkle &amp; Slay</span>
+      </a>
+      <nav class="shop-nav" id="shop-nav" aria-label="Shop navigation">
+        <a href="index.html">Home</a>
+        <a class="is-current" href="collection.html" aria-current="page">Shop</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+      <div class="shop-header-actions">
+        <button id="show-add-form" class="icon-text-button" type="button">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add product</span>
+        </button>
+        <button id="view-cart" class="cart-trigger" type="button" aria-label="View shopping cart">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="20" r="1"></circle>
+            <circle cx="18" cy="20" r="1"></circle>
+            <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6"></path>
+          </svg>
+          <span id="cart-count" class="cart-badge">0</span>
+        </button>
       </div>
     </div>
-    <nav class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="contact.html">Contact</a>
-      <div class="social-links-header">
-        <a href="https://facebook.com/sparkleandslay" target="_blank" rel="noopener" title="Facebook"><i class="fab fa-facebook"></i></a>
-        <a href="https://tiktok.com/@sparkleandslay" target="_blank" rel="noopener" title="TikTok"><i class="fab fa-tiktok"></i></a>
-        <a href="https://instagram.com/sparkleandslay" target="_blank" rel="noopener" title="Instagram"><i class="fab fa-instagram"></i></a>
-      </div>
-    </nav>
   </header>
 
-  <main>
-    <section class="section-light">
-      <div class="section-header">
-        <h3>Shop the latest pieces</h3>
+  <div class="shop-hero">
+    <div class="shop-hero-panel">
+      <div class="shop-hero-text">
+        <p class="shop-hero-kicker">The Boutique</p>
+        <h2>Pieces styled for how you live.</h2>
+        <p>Curated looks from our Harare showroom, ready to wear from day to night.</p>
+      </div>
+    </div>
+  </div>
+
+  <main id="main-content" tabindex="-1">
+    <section class="shop-page-section">
+      <div class="shop-page-heading">
+        <h1>Shop the collection</h1>
         <p>Find your next favorite look and add it to your cart.</p>
       </div>
 
@@ -65,16 +87,14 @@
         </form>
       </div>
 
-      <div class="section-actions">
-        <button id="show-add-form" class="button">Add New Collection</button>
-        <button id="view-cart" class="button button-secondary cart-trigger" type="button" aria-label="View shopping cart">
-          <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="9" cy="20" r="1"></circle>
-            <circle cx="18" cy="20" r="1"></circle>
-            <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6"></path>
-          </svg>
-          <span id="cart-count">0</span>
-        </button>
+      <div class="catalog-tools">
+        <label class="sr-only" for="collection-search">Search the collection</label>
+        <div class="search-field">
+          <i class="fa-solid fa-magnifying-glass search-field-icon" aria-hidden="true"></i>
+          <input id="collection-search" type="search" placeholder="Search by name or description" autocomplete="off" />
+          <button type="button" id="clear-search" class="search-field-clear" aria-label="Clear search" hidden>&times;</button>
+        </div>
+        <p id="collection-results" class="catalog-results" role="status" aria-live="polite"></p>
       </div>
 
       <div id="collection-list" class="collection-grid"></div>
@@ -89,12 +109,13 @@
           </div>
           <button id="close-cart" class="modal-close" type="button" aria-label="Close cart">&times;</button>
         </div>
-        <p class="cart-drop-hint">Drop a product here to add it.</p>
+        <p class="cart-drop-hint">Review your selections and choose a payment method when you are ready.</p>
         <div id="cart-items"></div>
         <div class="cart-summary">
           <div class="cart-total"><span>Grand Total</span><strong id="cart-total">$0.00</strong></div>
         </div>
-        <button id="checkout-cart" class="button" type="button">Continue to EcoCash checkout</button>
+        <button id="checkout-cart" class="button" type="button">Manual EcoCash payment</button>
+        <button id="api-checkout-cart" class="button button-secondary" type="button">Pay with EcoCash</button>
       </aside>
 
       <button id="cart-toast" class="cart-toast" type="button" aria-label="Open shopping cart">
@@ -150,6 +171,63 @@
           </div>
         </div>
       </div>
+
+      <div id="ecocash-api-modal" class="modal-overlay" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="api-order-modal-title">
+          <button id="close-api-order-modal" class="modal-close" type="button" aria-label="Close EcoCash payment">&times;</button>
+          <h4 id="api-order-modal-title">Pay with EcoCash</h4>
+          <p id="api-order-item-name">Selected items:</p>
+          <p class="order-note">Enter your EcoCash number. We will send the cart total to your phone for approval.</p>
+          <form id="api-order-form">
+            <label>Full name<input type="text" id="api-order-name" maxlength="255" placeholder="Your name" required /></label>
+            <label>EcoCash phone number<input type="tel" id="api-order-phone" placeholder="07XXXXXXXX" required /></label>
+            <label>Delivery address<input type="text" id="api-order-address" maxlength="500" placeholder="Where should we deliver this" /></label>
+            <p class="cart-total">Amount to pay: <strong id="api-order-amount">$0.00</strong></p>
+            <p id="api-order-status" class="page-note" role="status" aria-live="polite" hidden></p>
+            <div class="modal-actions">
+              <button type="submit" id="api-order-submit" class="button">Send payment request</button>
+              <button type="button" id="cancel-api-order" class="button button-secondary">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="quickview-modal" class="modal-overlay" aria-hidden="true">
+        <div class="modal quickview-modal" role="dialog" aria-modal="true" aria-labelledby="quickview-title">
+          <button id="close-quickview-modal" class="modal-close" type="button" aria-label="Close product details">&times;</button>
+          <div class="quickview-layout">
+            <div id="quickview-media" class="quickview-media"></div>
+            <div class="quickview-info">
+              <p id="quickview-stock" class="stock-badge" hidden></p>
+              <h4 id="quickview-title">Product name</h4>
+              <div id="quickview-rating" class="rating-row" hidden>
+                <span class="rating-stars" aria-hidden="true"></span>
+                <span id="quickview-rating-text"></span>
+              </div>
+              <p id="quickview-price" class="product-price">$0.00</p>
+              <p id="quickview-description">Description</p>
+              <div id="quickview-colors" class="variant-group" hidden>
+                <span class="variant-group-label">Color: <strong id="quickview-color-value"></strong></span>
+                <div id="quickview-color-options" class="color-swatches"></div>
+              </div>
+              <div id="quickview-sizes" class="variant-group" hidden>
+                <span class="variant-group-label">Size: <strong id="quickview-size-value"></strong></span>
+                <div id="quickview-size-options" class="size-options"></div>
+              </div>
+              <p id="quickview-selection-hint" class="field-error" hidden></p>
+              <div class="quickview-quantity" id="quickview-quantity-row" hidden>
+                <span>Quantity in cart</span>
+                <div class="quantity-controls">
+                  <button type="button" id="quickview-decrease" aria-label="Decrease quantity">-</button>
+                  <span id="quickview-quantity" aria-live="polite">1</span>
+                  <button type="button" id="quickview-increase" aria-label="Increase quantity">+</button>
+                </div>
+              </div>
+              <button id="quickview-cart-btn" class="buy-button" type="button">Add to Cart</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -187,6 +265,7 @@
     </div>
   </footer>
 
+  <script src="ui.js"></script>
   <script src="splash.js"></script>
   <script>
     // Splash screen: shown in full only on the first page of the session, see splash.js

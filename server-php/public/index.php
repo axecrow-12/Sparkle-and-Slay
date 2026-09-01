@@ -13,6 +13,7 @@ require __DIR__ . '/../src/routes/orders.php';
 require __DIR__ . '/../src/routes/settings.php';
 require __DIR__ . '/../src/upload.php';
 require __DIR__ . '/../src/routes/payments.php';
+require __DIR__ . '/../src/routes/ecocash.php';
 
 $origin = getenv('FRONTEND_ORIGIN') ?: '*';
 header("Access-Control-Allow-Origin: $origin");
@@ -104,6 +105,15 @@ if ($path === '/orders') {
     if ($method === 'GET') {
         ordersList();
     }
+}
+if ($method === 'POST' && $path === '/checkout') {
+    ecocashCheckout();
+}
+if ($method === 'POST' && $path === '/ecocash/notify') {
+    ecocashNotify();
+}
+if ($method === 'GET' && preg_match('#^/checkout/([a-f0-9]{64})$#', $path, $m)) {
+    ecocashCheckoutStatus($m[1]);
 }
 if ($method === 'GET' && $path === '/orders/summary') {
     ordersSummary();

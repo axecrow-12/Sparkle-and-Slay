@@ -17,10 +17,11 @@ The frontend used to store everything in the browser using localStorage. It now 
 
 ## PHP backend setup (active local backend)
 
-1. Install PHP 8.1 or newer and enable the `pdo_mysql` extension. Confirm with:
+1. Install PHP 8.1 or newer and enable the `pdo_mysql` and `curl` extensions. Confirm with:
 
    php -v
    php -m | findstr pdo_mysql
+   php -m | findstr curl
 
 2. Create a MySQL database and user. Example commands using the MySQL client:
 
@@ -75,7 +76,8 @@ From then on, login.html shows the normal login form instead of setup.
 ## Current notes
 
 - The PHP database starts empty; add products through the admin panel after creating the first admin password.
-- The cart uses local browser storage and submits the existing manual EcoCash order form.
-- EcoCash checkout submissions create pending payment records. Verify or reject them from the Payments section of the admin workspace.
+- The cart uses local browser storage and supports both manual EcoCash reference submission and automated EcoCash API checkout through the PHP backend.
+- Automated checkout recalculates the cart total on the server, sends the customer a payment request, and updates the order/payment after EcoCash calls the configured HTTPS notification URL. The cart clears only after confirmed completion.
+- Configure EcoCash credentials and the public HTTPS callback in `server-php/.env`; never commit or expose those values. The manual flow remains available and can be verified or rejected from the Payments section of the admin workspace.
 - The EcoCash merchant number is managed in Admin > Settings and shown on checkout. Weekly and monthly payment reports can be printed from Admin > Payments.
 - Deployment: the frontend can go to a static host, while the PHP backend can run on Apache/shared hosting with MySQL.

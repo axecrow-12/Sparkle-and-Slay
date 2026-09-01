@@ -16,20 +16,52 @@ function paymentsUpdateStatus(string $id): void
     requireAdmin();
     $body = getJsonBody();
     $status = $body['status'] ?? '';
+    $providerStatus = $body['providerStatus'] ?? null;
     $allowed = ['pending', 'verified', 'rejected'];
+    
     if (!in_array($status, $allowed, true)) {
         jsonResponse(['error' => 'Payment status must be pending, verified, or rejected.'], 400);
     }
+    
     $db = getDb();
-    $stmt = $db->prepare(
-        'UPDATE payments SET status = :status, verified_at = CASE WHEN :status = "verified" THEN CURRENT_TIMESTAMP ELSE NULL END WHERE id = :id'
-    );
-    $stmt->execute(['status' => $status, 'id' => $id]);
-    if ($stmt->rowCount() === 0) {
-        $check = $db->prepare('SELECT id FROM payments WHERE id = :id');
-        $check->execute(['id' => $id]);
-        if (!$check->fetch()) jsonResponse(['error' => 'Payment not found.'], 404);
+    $stmt = $db->prepare('SELECT id, status, provider_status FROM payments WHERE id = :id');
+    $stmt->execute(['id' => $id]);
+    $payment = $stmt->fetch();
+    
+    if (!$payment) {
+        jsonResponse(['error' => 'Payment not found.'], 404);
     }
+    
+    // When manually approving, also update provider status for consistency
+    if ($status === 'verified' && $payment['provider_status'] === 'INITIATED') {
+        $providerStatus = 'COMPLETED';
+    }
+    
+    $query = 'UPDATE payments SET status = :status';
+    $params = ['status' => $status, 'id' => $id];
+    
+    if ($providerStatus) {
+        $query .= ', provider_status = :provider_status';
+        $params['provider_status'] = $providerStatus;
+    }
+    
+    if ($status === 'verified' && $payment['status'] !== 'verified') {
+        $query .= ', verified_at = CURRENT_TIMESTAMP';
+    } elseif ($status !== 'verified' && $payment['status'] === 'verified') {
+        $query .= ', verified_at = NULL';
+    }
+    
+    $query .= ' WHERE id = :id';
+    
+    $stmt = $db->prepare($query);
+    $stmt->execute($params);
+    
+    if ($stmt->rowCount() === 0) {
+        jsonResponse(['error' => 'Payment not found.'], 404);
+    }
+    
+    error_log("Admin updated payment $id: status=$status, provider_status=$providerStatus");
+    
     $updated = $db->prepare('SELECT * FROM payments WHERE id = :id');
     $updated->execute(['id' => $id]);
     jsonResponse($updated->fetch());

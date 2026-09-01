@@ -5,7 +5,9 @@
     "description": "A graceful blue silhouette for polished day-to-evening style.",
     "image": "photos/Blue Dress.jpeg",
     "video": "",
-    "price": 12
+    "price": 12,
+    "colors": "Blue",
+    "sizes": "S, M, L"
   },
   {
     "id": 7,

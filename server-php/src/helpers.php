@@ -16,6 +16,23 @@ function getJsonBody(): array
 }
 
 /**
+ * Clamps an admin-provided average rating to the valid 0-5 range, or
+ * returns null when absent/invalid so it is stored as "no rating yet".
+ */
+function normalizeRatingAverage($value): ?float
+{
+    if ($value === null || $value === '') {
+        return null;
+    }
+
+    if (!is_numeric($value)) {
+        return null;
+    }
+
+    return round(max(0, min(5, (float) $value)), 1);
+}
+
+/**
  * Reads the Bearer token from the Authorization header, verifies it,
  * and returns the decoded payload. Ends the request with 401 if
  * the token is missing or invalid.

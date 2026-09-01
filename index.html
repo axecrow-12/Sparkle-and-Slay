@@ -10,6 +10,7 @@
   <script src="public-settings.js"></script>
 </head>
 <body class="page-enter">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <!-- Splash Screen -->
   <div class="splash-screen" id="splashScreen">
     <div class="splash-content">
@@ -23,59 +24,33 @@
     </div>
   </div>
 
-  <header class="site-header has-video">
-    <div class="brand">
-        <img
-            src="photos/A5ecfa8534cd84b8c9e91661fcf73dfc0C-removebg-preview.png"
-            alt="Sparkle & Slay logo"
-            class="logo"
-            onerror="this.onerror=null;this.src='photos/slay.jpeg'"
-        />
+  <header class="site-header has-video home-header">
+    <div class="home-header-top">
+      <a class="home-brand" href="index.html" aria-label="Sparkle and Slay home">
+        <img src="photos/A5ecfa8534cd84b8c9e91661fcf73dfc0C-removebg-preview.png" alt="Sparkle & Slay logo" class="logo" onerror="this.onerror=null;this.src='photos/slay.jpeg'" />
+        <span>Sparkle &amp; Slay</span>
+      </a>
+      <a class="home-contact-link" href="tel:+263776593476">Call us: +263 77 659 3476</a>
+      <div class="home-social-links" aria-label="Social media">
+        <a href="https://facebook.com/sparkleandslay" target="_blank" rel="noopener" aria-label="Sparkle and Slay on Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i></a>
+        <a href="https://tiktok.com/@sparkleandslay" target="_blank" rel="noopener" aria-label="Sparkle and Slay on TikTok"><i class="fab fa-tiktok" aria-hidden="true"></i></a>
+        <a href="https://instagram.com/sparkleandslay" target="_blank" rel="noopener" aria-label="Sparkle and Slay on Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>
+        <a href="https://wa.me/263776593476" target="_blank" rel="noopener" aria-label="Chat with Sparkle and Slay on WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
+      </div>
     </div>
-
-    <nav class="nav-links">
-        <a href="login.html" class="header-icon-link admin-link" aria-label="Admin login" title="Admin login">
-          <img src="photos/user-star.svg" alt="" aria-hidden="true" />
-        </a>
-        <a href="#about" class="header-icon-link" aria-label="About Sparkle & Slay" title="About">
-          <img src="photos/info.svg" alt="" aria-hidden="true" />
-        </a>
-        <a href="collection.html" class="header-icon-link" aria-label="Open store and collections" title="Store">
-          <img src="photos/store.svg" alt="" aria-hidden="true" />
-        </a>
-        <a href="contact.html" class="header-icon-link" aria-label="Contact Sparkle & Slay" title="Contact">
-          <img src="photos/contact-round.svg" alt="" aria-hidden="true" />
-        </a>
-
-        <div class="social-links-header">
-            <a
-                href="https://facebook.com/sparkleandslay"
-                target="_blank"
-                rel="noopener"
-                title="Facebook"
-            >
-                <i class="fab fa-facebook"></i>
-            </a>
-
-            <a
-                href="https://tiktok.com/@sparkleandslay"
-                target="_blank"
-                rel="noopener"
-                title="TikTok"
-            >
-                <i class="fab fa-tiktok"></i>
-            </a>
-
-            <a
-                href="https://instagram.com/sparkleandslay"
-                target="_blank"
-                rel="noopener"
-                title="Instagram"
-            >
-                <i class="fab fa-instagram"></i>
-            </a>
-        </div>
+    <nav class="home-nav" aria-label="Main navigation">
+      <a class="is-current" href="index.html" aria-current="page">Home</a>
+      <a href="collection.html">Shop</a>
+      <a href="#about">About us</a>
+      <a href="contact.html">Contact us</a>
+      <a href="login.html">Admin</a>
     </nav>
+    <div class="home-hero-content">
+      <p class="home-hero-kicker">Sparkle &amp; Slay</p>
+      <h1>Style made to stand out.</h1>
+      <p>Fresh pieces for everyday confidence and unforgettable moments.</p>
+      <a class="home-hero-cta" href="collection.html">Shop the collection</a>
+    </div>
 
     <video
         autoplay
@@ -86,7 +61,7 @@
         class="header-video"
         id="headerVideo"
     >
-        <source src="videos/Elegant Wear.mp4" type="video/mp4">
+        <source src="videos/SandSlay.mp4" type="video/mp4">
     </video>
   </header>
   
@@ -136,7 +111,7 @@
     </section>
 
 
-  <main>
+  <main id="main-content" tabindex="-1">
     
 
     <section class="hero-arrivals fade-up">
@@ -207,10 +182,11 @@
         <p>Get new arrivals, style updates, and exclusive offers delivered to your inbox.</p>
       </div>
       <form class="contact-form" id="newsletter-form">
-        <input type="email" id="newsletter-email" placeholder="Your email address" aria-label="Your email address" required />
+        <label class="sr-only" for="newsletter-email">Email address</label>
+        <input type="email" id="newsletter-email" placeholder="Your email address" autocomplete="email" required />
         <button type="submit">Join the List</button>
       </form>
-      <p id="newsletter-status" class="page-note" style="display:none;"></p>
+      <p id="newsletter-status" class="status-message" role="status" aria-live="polite" hidden></p>
     </section>
   </main>
 
@@ -248,6 +224,7 @@
       <p>&copy; 2026 Sparkle & Slay. All rights reserved.</p>
     </div>
   </footer>
+  <script src="ui.js"></script>
   <script src="splash.js"></script>
   <script>
     // Splash screen: shown in full only on the first page of the session, see splash.js

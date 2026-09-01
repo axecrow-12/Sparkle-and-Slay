@@ -10,6 +10,7 @@
   <script src="public-settings.js"></script>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <!-- Splash Screen -->
   <div class="splash-screen" id="splashScreen">
     <div class="splash-content">
@@ -45,7 +46,7 @@
     </nav>
   </header>
 
-  <main>
+  <main id="main-content" tabindex="-1">
     <section class="section-light">
       <div class="section-header">
         <h3>Contact Details</h3>
@@ -83,10 +84,11 @@
         <p>Get new arrivals, style updates, and exclusive offers delivered to your inbox.</p>
       </div>
       <form class="contact-form" id="newsletter-form">
-        <input type="email" id="newsletter-email" placeholder="Your email address" aria-label="Your email address" required />
+        <label class="sr-only" for="newsletter-email">Email address</label>
+        <input type="email" id="newsletter-email" placeholder="Your email address" autocomplete="email" required />
         <button type="submit">Join the List</button>
       </form>
-      <p id="newsletter-status" class="page-note" style="display:none;"></p>
+      <p id="newsletter-status" class="status-message" role="status" aria-live="polite" hidden></p>
     </section>
   </main>
 
@@ -124,6 +126,7 @@
     </div>
   </footer>
 
+  <script src="ui.js"></script>
   <script src="splash.js"></script>
   <script>
     // Splash screen: shown in full only on the first page of the session, see splash.js
@@ -135,12 +138,12 @@
       e.preventDefault();
       const email = document.getElementById('newsletter-email').value.trim();
 
-      newsletterStatus.style.display = 'none';
+      newsletterStatus.hidden = true;
 
       try {
         if (!USE_BACKEND) {
           newsletterStatus.textContent = 'Newsletter signup will be available soon.';
-          newsletterStatus.style.display = 'block';
+          SparkleUI.announce(newsletterStatus, 'Newsletter signup will be available soon.', 'warning');
           return;
         }
 
@@ -152,16 +155,14 @@
         const data = await response.json();
 
         if (!response.ok) {
-          newsletterStatus.textContent = data.error || 'Could not subscribe. Please try again.';
+          SparkleUI.announce(newsletterStatus, data.error || 'Could not subscribe. Please try again.', 'error');
         } else {
-          newsletterStatus.textContent = "You're on the list! Thanks for joining.";
+          SparkleUI.announce(newsletterStatus, "You're on the list! Thanks for joining.", 'success');
           newsletterForm.reset();
         }
       } catch (err) {
-        newsletterStatus.textContent = 'Could not reach the server. Is the backend running?';
+        SparkleUI.announce(newsletterStatus, 'Could not reach the server. Please try again shortly.', 'error');
       }
-
-      newsletterStatus.style.display = 'block';
     });
   </script>
 </body>
