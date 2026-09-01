@@ -33,6 +33,9 @@ function authSetup(): void
 
 function authLogin(): void
 {
+    $rateKey = 'login:' . getClientIp();
+    rateLimitCheck($rateKey, 5, 900); // 5 attempts per 15 minutes
+
     $body = getJsonBody();
     $password = $body['password'] ?? '';
 
@@ -48,9 +51,11 @@ function authLogin(): void
     }
 
     if (!password_verify($password, $row['password_hash'])) {
+        rateLimitRecordAttempt($rateKey);
         jsonResponse(['error' => 'Invalid password.'], 401);
     }
 
+    rateLimitClear($rateKey);
     $token = jwtSign(['role' => 'admin']);
     jsonResponse(['token' => $token]);
 }

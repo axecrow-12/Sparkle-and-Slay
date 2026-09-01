@@ -14,6 +14,7 @@ require __DIR__ . '/../src/routes/settings.php';
 require __DIR__ . '/../src/upload.php';
 require __DIR__ . '/../src/routes/payments.php';
 require __DIR__ . '/../src/routes/ecocash.php';
+require __DIR__ . '/../src/rateLimiter.php';
 
 $origin = getenv('FRONTEND_ORIGIN') ?: '*';
 header("Access-Control-Allow-Origin: $origin");

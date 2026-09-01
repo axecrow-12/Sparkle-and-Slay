@@ -60,35 +60,61 @@ function ecocashCart(array $items): array
     return [$validated, $subtotalCents, $ecocashFeeCents, $imttFeeCents, $subtotalCents + $ecocashFeeCents + $imttFeeCents];
 }
 
-function ecocashApiRequest(array $payload): array
+function ecocashApiRequest(string $method, string $url, ?array $payload = null): array
 {
-    $url = ecocashConfig('ECOCASH_API_URL');
-    $curl = curl_init($url);
-    curl_setopt_array($curl, [
-        CURLOPT_POST => true,
+    $username = ecocashConfig('ECOCASH_API_USERNAME');
+    $password = ecocashConfig('ECOCASH_API_PASSWORD');
+
+    $options = [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Accept: application/json'],
-        CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_USERPWD => "$username:$password", // HTTP Basic Auth, per the EcoCash API spec
         CURLOPT_TIMEOUT => max(5, (int) (getenv('ECOCASH_TIMEOUT_SECONDS') ?: 20)),
-    ]);
+    ];
+
+    if ($method === 'POST') {
+        $options[CURLOPT_POST] = true;
+        $options[CURLOPT_POSTFIELDS] = json_encode($payload);
+    }
+
+    $curl = curl_init($url);
+    curl_setopt_array($curl, $options);
     $response = curl_exec($curl);
     $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
     $error = curl_error($curl);
     curl_close($curl);
     $decoded = is_string($response) ? json_decode($response, true) : null;
+
     if ($error) {
-        error_log("EcoCash API Error: $error");
+        error_log("EcoCash API Error ($method $url): $error");
         throw new RuntimeException('EcoCash API connection failed: ' . $error);
     }
     if ($status < 200 || $status >= 300) {
-        error_log("EcoCash API HTTP $status: " . substr((string)$response, 0, 200));
+        error_log("EcoCash API HTTP $status ($method $url): " . substr((string) $response, 0, 200));
         throw new RuntimeException("EcoCash API returned HTTP $status");
     }
     if (!is_array($decoded)) {
-        error_log('EcoCash API Invalid JSON: ' . substr((string)$response, 0, 200));
+        error_log('EcoCash API Invalid JSON: ' . substr((string) $response, 0, 200));
         throw new RuntimeException('EcoCash API returned invalid JSON');
     }
+
     return $decoded;
+}
+
+/**
+ * Asks EcoCash directly what actually happened to a transaction, using our
+ * own API credentials. This is the source of truth. Never trust the body
+ * of an inbound /ecocash/notify POST on its own, since EcoCash's API does
+ * not sign or authenticate that callback in any way, anyone who discovers
+ * the notify URL could POST a fabricated "COMPLETED" body to it. Calling
+ * back here, authenticated with our own username and password, is what
+ * actually confirms a payment.
+ */
+function ecocashQueryTransaction(string $endUserId, string $clientCorrelator): array
+{
+    $base = rtrim(ecocashConfig('ECOCASH_QUERY_BASE_URL'), '/');
+    $url = $base . '/' . rawurlencode($endUserId) . '/transactions/amount/' . rawurlencode($clientCorrelator);
+    return ecocashApiRequest('GET', $url);
 }
 
 function ecocashProviderStatus(array $data): string
@@ -140,7 +166,6 @@ function ecocashCheckout(): void
     }
 
     $payload = [
-        'username' => ecocashConfig('ECOCASH_API_USERNAME'), 'password' => ecocashConfig('ECOCASH_API_PASSWORD'),
         'clientCorrelator' => $correlation, 'notifyUrl' => ecocashConfig('ECOCASH_NOTIFY_URL'), 'referenceCode' => $reference,
         'tranType' => 'MER', 'endUserId' => $phone, 'remarks' => 'Sparkle and Slay purchase', 'transactionOperationStatus' => 'CHARGED',
         'paymentAmount' => ['charginginformation' => ['amount' => (float) $amount, 'currency' => 'USD', 'description' => 'Online Purchase'], 'chargeMetaData' => ['channel' => 'WEB', 'purchaseCategoryCode' => 'Online Payment', 'onBeHalfOf' => 'Sparkle and Slay']],
@@ -149,7 +174,7 @@ function ecocashCheckout(): void
         'location' => ecocashConfig('ECOCASH_LOCATION', false) ?: 'Online', 'superMerchantName' => ecocashConfig('ECOCASH_SUPER_MERCHANT_NAME', false) ?: 'Sparkle and Slay', 'merchantName' => ecocashConfig('ECOCASH_MERCHANT_NAME', false) ?: 'Sparkle and Slay',
     ];
     try {
-        $provider = ecocashApiRequest($payload);
+        $provider = ecocashApiRequest('POST', ecocashConfig('ECOCASH_API_URL'), $payload);
         $status = ecocashProviderStatus($provider);
         $update = $db->prepare('UPDATE payments SET provider_status = :status, provider_response = :response, provider_reference = :provider_reference WHERE id = :id');
         $update->execute(['status' => $status, 'response' => json_encode($provider), 'provider_reference' => $provider['serverReferenceCode'] ?? ($provider['id'] ?? null), 'id' => $paymentId]);
@@ -168,87 +193,106 @@ function ecocashNotify(): void
 {
     $body = getJsonBody();
     $correlation = trim((string) ($body['clientCorrelator'] ?? ''));
-    $status = ecocashProviderStatus($body);
-    
-    // Validate notification structure
+
     if ($correlation === '') {
         error_log('EcoCash Notify: Missing clientCorrelator');
         jsonResponse(['error' => 'Invalid EcoCash notification: missing correlation ID.'], 400);
     }
-    if (!in_array($status, ['COMPLETED', 'FAILED'], true)) {
-        error_log("EcoCash Notify: Invalid status '$status' for correlation $correlation");
-        jsonResponse(['error' => 'Invalid EcoCash notification: unknown status.'], 400);
-    }
-    
+
     $db = getDb();
-    $stmt = $db->prepare('SELECT p.*, o.id AS order_id FROM payments p INNER JOIN orders o ON o.id = p.order_id WHERE p.client_correlation = :correlation');
+    $stmt = $db->prepare(
+        'SELECT p.*, o.id AS order_id, o.phone FROM payments p
+         INNER JOIN orders o ON o.id = p.order_id
+         WHERE p.client_correlation = :correlation'
+    );
     $stmt->execute(['correlation' => $correlation]);
     $payment = $stmt->fetch();
+
     if (!$payment) {
         error_log("EcoCash Notify: Payment not found for correlation $correlation");
         jsonResponse(['error' => 'Transaction not found.'], 404);
     }
-    
-    // Validate payment amount and merchant
-    $providerAmount = (float) ($body['paymentAmount']['charginginformation']['amount'] ?? 0);
-    $providerCurrency = strtoupper((string) ($body['currencyCode'] ?? $body['paymentAmount']['charginginformation']['currency'] ?? ''));
-    $merchant = (string) ($body['merchantCode'] ?? '');
-    $expectedMerchant = ecocashConfig('ECOCASH_MERCHANT_CODE');
-    
-    if ($status === 'COMPLETED') {
-        // Strict validation for completed transactions
-        if (abs($providerAmount - (float) $payment['amount']) > 0.001) {
-            error_log("EcoCash Notify: Amount mismatch for payment {$payment['id']}: provider=$providerAmount vs db={$payment['amount']}");
-            jsonResponse(['error' => 'EcoCash notification does not match the payment: amount mismatch.'], 409);
-        }
-        if ($providerCurrency !== $payment['currency']) {
-            error_log("EcoCash Notify: Currency mismatch for payment {$payment['id']}: provider=$providerCurrency vs db={$payment['currency']}");
-            jsonResponse(['error' => 'EcoCash notification does not match the payment: currency mismatch.'], 409);
-        }
-        if ($merchant !== $expectedMerchant) {
-            error_log("EcoCash Notify: Merchant mismatch for payment {$payment['id']}: provider=$merchant vs expected=$expectedMerchant");
-            jsonResponse(['error' => 'EcoCash notification does not match the payment: merchant mismatch.'], 409);
-        }
-    }
-    
-    // Don't update if already finalized
+
+    // Already finalized, nothing to do. Also protects against the notify
+    // endpoint being hit repeatedly for the same transaction.
     if (in_array($payment['status'], ['verified', 'rejected'], true)) {
-        error_log("EcoCash Notify: Payment {$payment['id']} already finalized with status {$payment['status']}");
         jsonResponse(['status' => $payment['status']]);
     }
-    
-    // Update payment and order atomically
+
+    // This is the trust boundary. Everything above just looked up which
+    // payment this notification claims to be about. Everything below
+    // decides what actually happened, using our own authenticated call,
+    // not the untrusted body of this request.
+    try {
+        $authoritative = ecocashQueryTransaction($payment['phone'], $correlation);
+    } catch (Throwable $error) {
+        error_log("EcoCash Notify: Query confirmation failed for payment {$payment['id']}: " . $error->getMessage());
+        // Do not finalize on a failed confirmation call. Leave the payment
+        // pending, a later notify or a manual admin check can retry this.
+        jsonResponse(['error' => 'Could not confirm transaction with EcoCash.'], 502);
+    }
+
+    $status = ecocashProviderStatus($authoritative);
+    if (!in_array($status, ['COMPLETED', 'FAILED'], true)) {
+        error_log("EcoCash Notify: Query returned unexpected status '$status' for payment {$payment['id']}");
+        jsonResponse(['status' => $payment['status']]); // stays pending, try again later
+    }
+
+    if ($status === 'COMPLETED') {
+        $providerAmount = (float) ($authoritative['paymentAmount']['charginginformation']['amount'] ?? 0);
+        $providerCurrency = strtoupper((string) ($authoritative['paymentAmount']['charginginformation']['currency'] ?? ''));
+        $merchant = (string) ($authoritative['merchantCode'] ?? '');
+        $expectedMerchant = ecocashConfig('ECOCASH_MERCHANT_CODE');
+
+        if (abs($providerAmount - (float) $payment['amount']) > 0.001) {
+            error_log("EcoCash Notify: Amount mismatch for payment {$payment['id']}: provider=$providerAmount vs db={$payment['amount']}");
+            jsonResponse(['error' => 'EcoCash confirmation does not match the payment: amount mismatch.'], 409);
+        }
+        if ($providerCurrency !== $payment['currency']) {
+            error_log("EcoCash Notify: Currency mismatch for payment {$payment['id']}");
+            jsonResponse(['error' => 'EcoCash confirmation does not match the payment: currency mismatch.'], 409);
+        }
+        if ($merchant !== $expectedMerchant) {
+            error_log("EcoCash Notify: Merchant mismatch for payment {$payment['id']}");
+            jsonResponse(['error' => 'EcoCash confirmation does not match the payment: merchant mismatch.'], 409);
+        }
+    }
+
     $db->beginTransaction();
     try {
         $newPaymentStatus = $status === 'COMPLETED' ? 'verified' : 'rejected';
         $orderStatus = $status === 'COMPLETED' ? 'processing' : 'payment_failed';
-        
-        $update = $db->prepare('UPDATE payments SET status = :payment_status, provider_status = :provider_status, provider_response = :response, provider_reference = :provider_reference, verified_at = CASE WHEN :payment_status = "verified" THEN CURRENT_TIMESTAMP ELSE NULL END, completed_at = CURRENT_TIMESTAMP WHERE id = :id AND status = "pending"');
+
+        $update = $db->prepare(
+            'UPDATE payments SET status = :payment_status, provider_status = :provider_status,
+             provider_response = :response, provider_reference = :provider_reference,
+             verified_at = CASE WHEN :payment_status = "verified" THEN CURRENT_TIMESTAMP ELSE NULL END,
+             completed_at = CURRENT_TIMESTAMP
+             WHERE id = :id AND status = "pending"'
+        );
         $update->execute([
             'payment_status' => $newPaymentStatus,
             'provider_status' => $status,
-            'response' => json_encode($body),
-            'provider_reference' => $body['ecocashReference'] ?? ($body['serverReferenceCode'] ?? null),
-            'id' => $payment['id']
+            'response' => json_encode($authoritative),
+            'provider_reference' => $authoritative['ecocashReference'] ?? ($authoritative['serverReferenceCode'] ?? null),
+            'id' => $payment['id'],
         ]);
-        
+
         if ($update->rowCount() === 0) {
-            error_log("EcoCash Notify: Payment {$payment['id']} update failed (status not pending)");
             $db->rollBack();
-            jsonResponse(['error' => 'Payment already processed.'], 409);
+            jsonResponse(['status' => $payment['status']]); // already handled elsewhere, not an error
         }
-        
+
         $order = $db->prepare('UPDATE orders SET status = :status WHERE id = :id AND status = "pending"');
         $order->execute(['status' => $orderStatus, 'id' => $payment['order_id']]);
-        
+
         $db->commit();
-        error_log("EcoCash Notify: Payment {$payment['id']} updated to status=$newPaymentStatus");
+        error_log("EcoCash Notify: Payment {$payment['id']} confirmed via query, status=$newPaymentStatus");
     } catch (Throwable $error) {
         $db->rollBack();
-        error_log("EcoCash Notify: Transaction failed: " . $error->getMessage());
         throw $error;
     }
-    
+
     jsonResponse(['status' => $newPaymentStatus]);
 }
 
