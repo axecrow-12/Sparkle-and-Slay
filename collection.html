@@ -24,7 +24,7 @@
     </div>
   </div>
 
-  <div class="shop-topbar">Free delivery on EcoCash orders over $50 in Harare</div>
+  <div class="shop-topbar"><i class="fa-solid fa-truck" aria-hidden="true"></i><span>Free delivery on EcoCash orders over $50 in Harare</span></div>
 
   <header class="shop-header">
     <div class="shop-header-inner">
@@ -34,14 +34,17 @@
       </button>
       <a class="shop-brand" href="index.html">
         <img src="photos/A5ecfa8534cd84b8c9e91661fcf73dfc0C-removebg-preview.png" alt="Sparkle & Slay logo" class="logo" onerror="this.onerror=null;this.src='photos/slay.jpeg'" />
-        <span>Sparkle &amp; Slay</span>
+        <span class="shop-brand-copy"><span class="shop-brand-name">Sparkle &amp; Slay</span><span class="shop-brand-tagline">Boutique</span></span>
       </a>
       <nav class="shop-nav" id="shop-nav" aria-label="Shop navigation">
         <a href="index.html">Home</a>
-        <a class="is-current" href="collection.html" aria-current="page">Shop</a>
+        <a class="is-current" href="collection.html" aria-current="page">Shop <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></a>
+        <a href="index.html#about">About Us</a>
         <a href="contact.html">Contact</a>
       </nav>
       <div class="shop-header-actions">
+        <button id="focus-search" class="shop-icon-button" type="button" aria-label="Search the collection"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button>
+        <a class="shop-icon-button" href="login.html" aria-label="Account"><i class="fa-regular fa-user" aria-hidden="true"></i></a>
         <button id="show-add-form" class="icon-text-button" type="button">
           <i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add product</span>
         </button>
@@ -57,18 +60,33 @@
     </div>
   </header>
 
-  <div class="shop-hero">
-    <div class="shop-hero-panel">
+  <section class="shop-hero" aria-labelledby="shop-hero-title">
+    <div class="shop-hero-panel" id="shop-hero-panel">
       <div class="shop-hero-text">
         <p class="shop-hero-kicker">The Boutique</p>
-        <h2>Pieces styled for how you live.</h2>
+        <h2 id="shop-hero-title">Pieces styled for<br>how <em>you</em> live.</h2>
         <p>Curated looks from our Harare showroom, ready to wear from day to night.</p>
+        <a class="shop-hero-cta" href="#shop-collection">Shop the Collection <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+      </div>
+      <button id="hero-previous" class="hero-navigation hero-navigation-previous" type="button" aria-label="Show previous featured image"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></button>
+      <button id="hero-next" class="hero-navigation hero-navigation-next" type="button" aria-label="Show next featured image"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+      <div class="hero-pagination" aria-label="Featured image selection">
+        <button class="is-active" type="button" aria-label="Show featured image 1" aria-current="true"></button>
+        <button type="button" aria-label="Show featured image 2"></button>
+        <button type="button" aria-label="Show featured image 3"></button>
       </div>
     </div>
-  </div>
+  </section>
+
+  <section class="shop-benefits" aria-label="Shopping benefits">
+    <div class="shop-benefit"><span class="shop-benefit-icon"><i class="fa-solid fa-truck" aria-hidden="true"></i></span><p><strong>Fast Local Delivery</strong><span>Reliable delivery in Harare</span></p></div>
+    <div class="shop-benefit"><span class="shop-benefit-icon"><i class="fa-regular fa-shield" aria-hidden="true"></i></span><p><strong>Secure Payments</strong><span>Pay safely with EcoCash</span></p></div>
+    <div class="shop-benefit"><span class="shop-benefit-icon"><i class="fa-regular fa-gem" aria-hidden="true"></i></span><p><strong>Quality Promise</strong><span>Handpicked. Quality assured.</span></p></div>
+    <div class="shop-benefit"><span class="shop-benefit-icon"><i class="fa-solid fa-headset" aria-hidden="true"></i></span><p><strong>Customer Support</strong><span>We're here to help</span></p></div>
+  </section>
 
   <main id="main-content" tabindex="-1">
-    <section class="shop-page-section">
+    <section class="shop-page-section" id="shop-collection">
       <div class="shop-page-heading">
         <h1>Shop the collection</h1>
         <p>Find your next favorite look and add it to your cart.</p>
@@ -88,13 +106,24 @@
       </div>
 
       <div class="catalog-tools">
+        <p id="collection-results" class="catalog-results" role="status" aria-live="polite"></p>
         <label class="sr-only" for="collection-search">Search the collection</label>
         <div class="search-field">
           <i class="fa-solid fa-magnifying-glass search-field-icon" aria-hidden="true"></i>
           <input id="collection-search" type="search" placeholder="Search by name or description" autocomplete="off" />
           <button type="button" id="clear-search" class="search-field-clear" aria-label="Clear search" hidden>&times;</button>
         </div>
-        <p id="collection-results" class="catalog-results" role="status" aria-live="polite"></p>
+        <label class="sr-only" for="collection-sort">Sort products</label>
+        <select id="collection-sort" class="catalog-sort">
+          <option value="newest">Newest first</option>
+          <option value="price-low">Price: low to high</option>
+          <option value="price-high">Price: high to low</option>
+          <option value="name">Name: A to Z</option>
+        </select>
+        <div class="catalog-view-toggle" aria-label="Product layout">
+          <button type="button" class="is-active" data-catalog-view="grid" aria-label="Use grid view" aria-pressed="true"><i class="fa-solid fa-table-cells" aria-hidden="true"></i></button>
+          <button type="button" data-catalog-view="list" aria-label="Use compact list view" aria-pressed="false"><i class="fa-solid fa-list" aria-hidden="true"></i></button>
+        </div>
       </div>
 
       <div id="collection-list" class="collection-grid"></div>

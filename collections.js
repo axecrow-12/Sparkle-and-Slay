@@ -6,14 +6,60 @@ const cancelAddBtn = document.getElementById('cancel-add');
 const form = document.getElementById('collection-form');
 const searchInput = document.getElementById('collection-search');
 const resultsMessage = document.getElementById('collection-results');
+const sortSelect = document.getElementById('collection-sort');
+const catalogViewButtons = document.querySelectorAll('[data-catalog-view]');
+const focusSearchBtn = document.getElementById('focus-search');
 
 SparkleUI.setupMenu(document.getElementById('shop-menu-toggle'), document.getElementById('shop-nav'));
+
+const heroPanel = document.getElementById('shop-hero-panel');
+const heroDots = document.querySelectorAll('.hero-pagination button');
+const heroImages = [
+  'photos/SandSlay Backdrop 2.jpg',
+  'photos/SandSlay Backdrop.jpg',
+  'photos/SandSlay Clothes Line.jpg',
+];
+let heroIndex = 0;
+let heroTimer;
+
+function setHeroSlide(nextIndex) {
+  if (!heroPanel) return;
+  heroIndex = (nextIndex + heroImages.length) % heroImages.length;
+  heroPanel.style.backgroundImage = `linear-gradient(90deg, rgba(7, 42, 31, 0.94) 0%, rgba(10, 46, 34, 0.77) 32%, rgba(10, 46, 34, 0.31) 60%, rgba(10, 46, 34, 0.08) 100%), url('${heroImages[heroIndex]}')`;
+  heroDots.forEach((dot, index) => {
+    const isActive = index === heroIndex;
+    dot.classList.toggle('is-active', isActive);
+    dot.setAttribute('aria-current', String(isActive));
+  });
+}
+
+function restartHeroRotation() {
+  window.clearInterval(heroTimer);
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    heroTimer = window.setInterval(() => setHeroSlide(heroIndex + 1), 6500);
+  }
+}
+
+document.getElementById('hero-previous')?.addEventListener('click', () => {
+  setHeroSlide(heroIndex - 1);
+  restartHeroRotation();
+});
+document.getElementById('hero-next')?.addEventListener('click', () => {
+  setHeroSlide(heroIndex + 1);
+  restartHeroRotation();
+});
+heroDots.forEach((dot, index) => dot.addEventListener('click', () => {
+  setHeroSlide(index);
+  restartHeroRotation();
+}));
+restartHeroRotation();
 
 let collections = [];
 let cart = JSON.parse(localStorage.getItem('sparkleCart') || '[]').map((item) => ({
   ...item,
   quantity: Math.max(1, Number(item.quantity) || 1),
 }));
+let favoriteProductIds = new Set(JSON.parse(localStorage.getItem('sparkleFavoriteProducts') || '[]').map(String));
 const cartCount = document.getElementById('cart-count');
 const viewCartBtn = document.getElementById('view-cart');
 const cartPanel = document.getElementById('cart-panel');
@@ -34,6 +80,17 @@ function formatPrice(value) {
   return Number.isFinite(amount)
     ? new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount)
     : 'Price on request';
+}
+
+function toggleFavorite(item) {
+  const id = String(item.id);
+  if (favoriteProductIds.has(id)) {
+    favoriteProductIds.delete(id);
+  } else {
+    favoriteProductIds.add(id);
+  }
+  localStorage.setItem('sparkleFavoriteProducts', JSON.stringify([...favoriteProductIds]));
+  renderCollections();
 }
 
 function resolveMediaUrl(value) {
@@ -195,8 +252,20 @@ function renderCart() {
 
 function getFilteredCollections() {
   const query = searchInput?.value.trim().toLowerCase() || '';
-  if (!query) return collections;
-  return collections.filter((item) => `${item.name || ''} ${item.description || ''}`.toLowerCase().includes(query));
+  const matchingCollections = query
+    ? collections.filter((item) => `${item.name || ''} ${item.description || ''}`.toLowerCase().includes(query))
+    : [...collections];
+
+  switch (sortSelect?.value) {
+    case 'price-low':
+      return matchingCollections.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+    case 'price-high':
+      return matchingCollections.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
+    case 'name':
+      return matchingCollections.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+    default:
+      return matchingCollections;
+  }
 }
 
 function updateQuantity(index, change) {
@@ -322,68 +391,54 @@ function renderCollections() {
       mediaContainer.appendChild(video);
     }
 
-    const quickviewHint = document.createElement('span');
-    quickviewHint.className = 'quickview-hint';
-    quickviewHint.setAttribute('aria-hidden', 'true');
-    quickviewHint.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
-    if (mediaContainer.children.length > 0) {
-      mediaContainer.appendChild(quickviewHint);
-    }
-
-    const quickviewTrigger = document.createElement('button');
-    quickviewTrigger.type = 'button';
-    quickviewTrigger.className = 'card-quickview-trigger';
-    quickviewTrigger.setAttribute('aria-label', `View details for ${item.name || 'this product'}`);
-    quickviewTrigger.addEventListener('click', () => openQuickview(item));
-
     const title = document.createElement('h4');
     title.textContent = item.name || 'Untitled Collection';
 
     const description = document.createElement('p');
     description.textContent = item.description || 'No description provided.';
 
-    if (mediaContainer.children.length > 0) {
-      quickviewTrigger.appendChild(mediaContainer);
-    }
-    quickviewTrigger.appendChild(title);
-
-    if (Number(item.rating_count) > 0) {
-      const ratingRow = document.createElement('div');
-      ratingRow.className = 'rating-row';
-      const stars = document.createElement('span');
-      stars.className = 'rating-stars';
-      stars.setAttribute('aria-hidden', 'true');
-      stars.innerHTML = renderStarIcons(item.rating_average);
-      const ratingText = document.createElement('span');
-      ratingText.textContent = `(${item.rating_count})`;
-      ratingRow.append(stars, ratingText);
-      quickviewTrigger.appendChild(ratingRow);
-    }
-
     const price = document.createElement('p');
     price.className = 'product-price';
     price.textContent = formatPrice(item.price);
-    quickviewTrigger.appendChild(description);
-    quickviewTrigger.appendChild(price);
-    card.appendChild(quickviewTrigger);
+
+    const details = document.createElement('div');
+    details.className = 'product-card-details';
+
+    const label = document.createElement('p');
+    label.className = 'product-card-label';
+    label.textContent = 'New arrival';
+
+    const actions = document.createElement('div');
+    actions.className = 'product-card-actions';
+
+    const detailsBtn = document.createElement('button');
+    detailsBtn.className = 'buy-button';
+    detailsBtn.type = 'button';
+    detailsBtn.textContent = 'View Details';
+    detailsBtn.addEventListener('click', () => openQuickview(item));
+
+    const favoriteBtn = document.createElement('button');
+    const isFavorite = favoriteProductIds.has(String(item.id));
+    favoriteBtn.className = `favorite-button${isFavorite ? ' is-favorite' : ''}`;
+    favoriteBtn.type = 'button';
+    favoriteBtn.setAttribute('aria-label', `${isFavorite ? 'Remove' : 'Save'} ${item.name || 'product'} ${isFavorite ? 'from' : 'to'} favorites`);
+    favoriteBtn.setAttribute('aria-pressed', String(isFavorite));
+    favoriteBtn.innerHTML = `<i class="${isFavorite ? 'fa-solid' : 'fa-regular'} fa-heart" aria-hidden="true"></i>`;
+    favoriteBtn.addEventListener('click', () => toggleFavorite(item));
+
+    details.append(label, title, description, price);
+    actions.append(detailsBtn, favoriteBtn);
+    details.appendChild(actions);
+
+    if (mediaContainer.children.length > 0) {
+      card.appendChild(mediaContainer);
+    }
+    card.appendChild(details);
 
     const colors = parseVariantList(item.colors);
     const sizes = parseVariantList(item.sizes);
     const hasVariants = colors.length > 0 || sizes.length > 0;
     card.draggable = !hasVariants;
-
-    const cartBtn = document.createElement('button');
-    cartBtn.className = 'buy-button';
-    if (hasVariants) {
-      cartBtn.textContent = 'Select options';
-      cartBtn.dataset.selectOptions = 'true';
-      cartBtn.addEventListener('click', () => openQuickview(item));
-    } else {
-      const inCart = findCartIndex(item) !== -1;
-      cartBtn.textContent = inCart ? 'Remove from Cart' : 'Add to Cart';
-      cartBtn.addEventListener('click', () => addToCart(item));
-    }
-    card.appendChild(cartBtn);
 
     listEl.appendChild(card);
   });
@@ -711,6 +766,24 @@ clearSearchBtn?.addEventListener('click', () => {
   clearSearchBtn.hidden = true;
   searchInput.focus();
   renderCollections();
+});
+
+focusSearchBtn?.addEventListener('click', () => {
+  document.getElementById('shop-collection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  window.setTimeout(() => searchInput?.focus(), 350);
+});
+
+sortSelect?.addEventListener('change', renderCollections);
+catalogViewButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    const view = button.dataset.catalogView;
+    listEl.classList.toggle('is-list-view', view === 'list');
+    catalogViewButtons.forEach((control) => {
+      const isActive = control === button;
+      control.classList.toggle('is-active', isActive);
+      control.setAttribute('aria-pressed', String(isActive));
+    });
+  });
 });
 
 showAddBtn.addEventListener('click', () => {

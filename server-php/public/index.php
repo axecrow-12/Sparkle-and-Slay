@@ -3,6 +3,19 @@
 require __DIR__ . '/../src/env.php';
 loadEnv(__DIR__ . '/../.env');
 
+// APP_ENV controls how much PHP tells the browser when something breaks.
+// Anywhere that is not explicitly local development is treated as
+// production, fail-safe by default, rather than accidentally leaking
+// stack traces because someone forgot to set this on a real host.
+$appEnv = getenv('APP_ENV') ?: 'production';
+if ($appEnv === 'local') {
+    ini_set('display_errors', '1');
+    error_reporting(E_ALL);
+} else {
+    ini_set('display_errors', '0');
+    ini_set('log_errors', '1');
+}
+
 require __DIR__ . '/../src/db.php';
 require __DIR__ . '/../src/jwt.php';
 require __DIR__ . '/../src/helpers.php';
@@ -16,8 +29,23 @@ require __DIR__ . '/../src/upload.php';
 require __DIR__ . '/../src/routes/payments.php';
 require __DIR__ . '/../src/routes/ecocash.php';
 
-$origin = getenv('FRONTEND_ORIGIN') ?: '*';
-header("Access-Control-Allow-Origin: $origin");
+$origin = getenv('FRONTEND_ORIGIN');
+if ($origin) {
+    header("Access-Control-Allow-Origin: $origin");
+} elseif ($appEnv === 'local') {
+    // Local dev without FRONTEND_ORIGIN configured, default to the port
+    // the README's python -m http.server step uses, so setup still
+    header('Access-Control-Allow-Origin: http://localhost:5500');
+} else {
+    // No trusted origin configured, and this is not local development.
+    // Deliberately do not fall back to a wildcard here, that would let
+    // any website on the internet make requests against this API using
+    // a visitor's browser. Failing closed means cross-origin requests
+    // get blocked by the browser until FRONTEND_ORIGIN is set properly,
+    // which is loud and obvious in testing rather than a silent, quiet
+    // security hole in production.
+    error_log('FRONTEND_ORIGIN is not set. Refusing to allow cross origin requests until this is configured.');
+}
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
