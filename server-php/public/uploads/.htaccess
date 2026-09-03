@@ -1,0 +1,12 @@
+# Uploaded files are user supplied. The app only writes jpg, png, webp,
+# mp4, and webm here (see src/upload.php), but this file makes sure that
+# even if that check were ever bypassed or misconfigured, nothing in this
+# folder can be executed as a script.
+
+<FilesMatch "\.(php|phtml|php\d|pht|phar|cgi|pl|py|sh)$">
+    Require all denied
+</FilesMatch>
+
+# Belt and braces for older Apache configs that read this directive instead
+Options -ExecCGI
+php_flag engine off

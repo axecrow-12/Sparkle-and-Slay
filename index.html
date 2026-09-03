@@ -9,7 +9,7 @@
   <script src="config.js"></script>
   <script src="public-settings.js"></script>
 </head>
-<body class="page-enter">
+<body class="page-enter home-page">
   <a class="skip-link" href="#main-content">Skip to main content</a>
   <!-- Splash Screen -->
   <div class="splash-screen" id="splashScreen">
@@ -24,34 +24,39 @@
     </div>
   </div>
 
-  <header class="site-header has-video home-header">
-    <div class="home-header-top">
+  <div class="home-topbar"><i class="fa-solid fa-truck" aria-hidden="true"></i><span>Free delivery on EcoCash orders over $50 in Harare</span></div>
+
+  <header class="home-header">
+    <div class="home-header-inner">
       <a class="home-brand" href="index.html" aria-label="Sparkle and Slay home">
         <img src="photos/A5ecfa8534cd84b8c9e91661fcf73dfc0C-removebg-preview.png" alt="Sparkle & Slay logo" class="logo" onerror="this.onerror=null;this.src='photos/slay.jpeg'" />
-        <span>Sparkle &amp; Slay</span>
+        <span class="home-brand-copy"><span class="home-brand-name">Sparkle &amp; Slay</span><span class="home-brand-tagline">Boutique</span></span>
       </a>
-      <a class="home-contact-link" href="tel:+263776593476">Call us: +263 77 659 3476</a>
+      <nav class="home-nav" aria-label="Main navigation">
+        <a class="is-current" href="index.html" aria-current="page">Home</a>
+        <a href="collection.html">Shop <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></a>
+        <a href="#about">About Us</a>
+        <a href="contact.html">Contact Us</a>
+        <a href="login.html">Admin</a>
+      </nav>
+      <a class="home-contact-link" href="tel:+263776593476"><i class="fa-solid fa-phone" aria-hidden="true"></i><span>+263 77 659 3476</span></a>
       <div class="home-social-links" aria-label="Social media">
         <a href="https://facebook.com/sparkleandslay" target="_blank" rel="noopener" aria-label="Sparkle and Slay on Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i></a>
         <a href="https://tiktok.com/@sparkleandslay" target="_blank" rel="noopener" aria-label="Sparkle and Slay on TikTok"><i class="fab fa-tiktok" aria-hidden="true"></i></a>
         <a href="https://instagram.com/sparkleandslay" target="_blank" rel="noopener" aria-label="Sparkle and Slay on Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>
         <a href="https://wa.me/263776593476" target="_blank" rel="noopener" aria-label="Chat with Sparkle and Slay on WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
       </div>
+      <a class="home-cart-link" href="collection.html" aria-label="Open shopping cart"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span class="home-cart-badge">1</span></a>
     </div>
-    <nav class="home-nav" aria-label="Main navigation">
-      <a class="is-current" href="index.html" aria-current="page">Home</a>
-      <a href="collection.html">Shop</a>
-      <a href="#about">About us</a>
-      <a href="contact.html">Contact us</a>
-      <a href="login.html">Admin</a>
-    </nav>
+  </header>
+
+  <section class="home-editorial-hero" aria-labelledby="home-hero-title">
     <div class="home-hero-content">
       <p class="home-hero-kicker">Sparkle &amp; Slay</p>
-      <h1>Style made to stand out.</h1>
+      <h1 id="home-hero-title">Style made to<br><em>stand out.</em></h1>
       <p>Fresh pieces for everyday confidence and unforgettable moments.</p>
-      <a class="home-hero-cta" href="collection.html">Shop the collection</a>
+      <a class="home-hero-cta" href="collection.html">Shop the Collection <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
     </div>
-
     <video
         autoplay
         muted
@@ -63,14 +68,23 @@
     >
         <source src="videos/SandSlay.mp4" type="video/mp4">
     </video>
-  </header>
-  
+  </section>
+
+  <section class="home-benefits" aria-label="Shopping benefits">
+    <div class="home-benefit"><span class="home-benefit-icon"><i class="fa-solid fa-truck" aria-hidden="true"></i></span><p><strong>Fast Local Delivery</strong><span>Reliable delivery<br>in Harare</span></p></div>
+    <div class="home-benefit"><span class="home-benefit-icon"><i class="fa-regular fa-shield" aria-hidden="true"></i></span><p><strong>Secure Payments</strong><span>Pay safely and securely<br>with EcoCash</span></p></div>
+    <div class="home-benefit"><span class="home-benefit-icon"><i class="fa-regular fa-gem" aria-hidden="true"></i></span><p><strong>Quality Assured</strong><span>Handpicked pieces,<br>quality you can trust</span></p></div>
+    <div class="home-benefit"><span class="home-benefit-icon"><i class="fa-solid fa-headset" aria-hidden="true"></i></span><p><strong>Customer Support</strong><span>We're here to help<br>you shine</span></p></div>
+  </section>
+
+  <main id="main-content" tabindex="-1">
     <section id="featured-collection" class="section-light fade-up">
 
       <div class="section-header">
-        <h3>Featured Collection</h3>
+        <p class="section-kicker">Featured <i class="fa-regular fa-star" aria-hidden="true"></i> Collection</p>
+        <h3>Fresh arrivals, just for you</h3>
         <p>
-          Fresh arrivals built for effortless style and bold confidence.
+          Discover pieces that bring out your best.
         </p>
       </div>
 
@@ -107,58 +121,57 @@
           </p>
         </article>
       </div>
+      <a class="home-featured-cta" href="collection.html">View all collections <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
 
     </section>
 
 
-  <main id="main-content" tabindex="-1">
-    
-
     <section class="hero-arrivals fade-up">
       <div class="arrivals-container">
         <div class="arrivals-header">
-          <h2>New Arrivals</h2>
+          <p class="arrivals-kicker">New arrivals</p>
+          <h2>Fresh looks, just for you</h2>
           <p>Discover our latest pieces fresh off the rack</p>
         </div>
         <div id="arrivals-grid" class="arrivals-grid">
-          <!-- New arrivals items will be displayed here -->
           <div class="arrival-card">
             <div class="arrival-image">
               <img src="photos/WhatsApp Image 2026-07-07 at 09.34.50.jpeg" alt="New Arrival" />
             </div>
-            <h4>Coming Soon</h4>
-            <p>New items added weekly</p>
+            <div class="arrival-card-content"><span class="arrival-icon"><i class="fa-solid fa-hanger" aria-hidden="true"></i></span><div><h4>Coming Soon</h4><p>New items added weekly</p><a href="#contact">Notify Me <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div></div>
           </div>
           <div class="arrival-card">
             <div class="arrival-image">
               <img src="photos/girl.jpeg" alt="New Arrival" />
             </div>
-            <h4>Coming Soon</h4>
-            <p>New items added weekly</p>
+            <div class="arrival-card-content"><span class="arrival-icon"><i class="fa-solid fa-hanger" aria-hidden="true"></i></span><div><h4>Coming Soon</h4><p>New items added weekly</p><a href="#contact">Notify Me <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div></div>
           </div>
           <div class="arrival-card">
             <div class="arrival-image">
               <img src="photos/Gemini_Generated_Image_h5eczkh5eczkh5ec.png" alt="New Arrival" />
             </div>
-            <h4>Coming Soon</h4>
-            <p>New items added weekly</p>
+            <div class="arrival-card-content"><span class="arrival-icon"><i class="fa-solid fa-hanger" aria-hidden="true"></i></span><div><h4>Coming Soon</h4><p>New items added weekly</p><a href="#contact">Notify Me <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div></div>
           </div>
           <div class="arrival-card">
             <div class="arrival-image">
               <img src="photos/Gemini_Generated_Image_do7lycdo7lycdo7l.png" alt="New Arrival" />
             </div>
-            <h4>Coming Soon</h4>
-            <p>New items added weekly</p>
+            <div class="arrival-card-content"><span class="arrival-icon"><i class="fa-solid fa-hanger" aria-hidden="true"></i></span><div><h4>Coming Soon</h4><p>New items added weekly</p><a href="#contact">Notify Me <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div></div>
           </div>
         </div>
+        <a class="arrivals-all-cta" href="collection.html">View All New Arrivals <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
       </div>
     </section>
 
     <section id="collection" class="section-light fade-up">
-      <div class="hero">
-        <p class="eyebrow">Style with confidence<br>Discover collections crafted for everyday luxury and standout looks</p>
-        <h2>Elevate your wardrobe with bold, modern apparel.</h2>
-        <a class="button" href="collection.html">Shop the Collection</a>
+      <div class="home-collection-cta">
+        <div class="home-collection-copy">
+          <p class="eyebrow">Style with confidence</p>
+          <h2>Elevate your wardrobe<br>with bold, modern apparel.</h2>
+          <p>Discover collections crafted for everyday luxury<br>and standout looks that turn heads.</p>
+          <a class="button" href="collection.html">Shop the Collection <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+        </div>
+        <div class="home-collection-image"><img src="photos/SandSlay Avatar.jpg" alt="Sparkle &amp; Slay style inspiration" /></div>
       </div>
     </section>
 
@@ -267,21 +280,25 @@
         name: 'Urban Essentials',
         description: 'Modern staples designed in sleek and crisp tones.',
         image: 'photos/jean1.png',
+        price: 42,
       },
       {
         name: 'Statement Looks',
         description: 'Head-turning styles for when you want to make a lasting impression.',
         image: 'photos/dress1.png',
+        price: 48,
       },
       {
         name: 'Everyday Essentials',
         description: 'Easy everyday pieces with a polished, versatile finish.',
         image: 'photos/jean2.png',
+        price: 45,
       },
       {
         name: 'Second Look',
         description: 'A statement dress designed for memorable occasions.',
         image: 'photos/dress2.png',
+        price: 38,
       },
     ];
 
@@ -295,18 +312,6 @@
       collections.slice(0, 4).forEach((item) => {
         const card = document.createElement('article');
         card.className = 'card';
-        card.setAttribute('role', 'button');
-        card.setAttribute('tabindex', '0');
-        card.setAttribute('aria-label', `View ${item.name || 'collection'}`);
-        card.addEventListener('click', () => {
-          window.location.href = 'collection.html';
-        });
-        card.addEventListener('keydown', (event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            window.location.href = 'collection.html';
-          }
-        });
 
         if (item.image) {
           const image = document.createElement('img');
@@ -321,8 +326,28 @@
         const description = document.createElement('p');
         description.textContent = item.description || 'Description coming soon.';
 
-        card.appendChild(title);
-        card.appendChild(description);
+        const footer = document.createElement('div');
+        footer.className = 'featured-card-footer';
+
+        const price = document.createElement('p');
+        price.className = 'featured-card-price';
+        price.textContent = Number.isFinite(Number(item.price)) ? `$${Number(item.price).toFixed(2)}` : 'View details';
+
+        const favorite = document.createElement('button');
+        favorite.className = 'featured-favorite';
+        favorite.type = 'button';
+        favorite.setAttribute('aria-label', `Save ${item.name || 'product'} to favorites`);
+        favorite.setAttribute('aria-pressed', 'false');
+        favorite.innerHTML = '<i class="fa-regular fa-heart" aria-hidden="true"></i>';
+        favorite.addEventListener('click', () => {
+          const isFavorite = favorite.classList.toggle('is-favorite');
+          favorite.setAttribute('aria-pressed', String(isFavorite));
+          favorite.setAttribute('aria-label', `${isFavorite ? 'Remove' : 'Save'} ${item.name || 'product'} ${isFavorite ? 'from' : 'to'} favorites`);
+          favorite.innerHTML = `<i class="${isFavorite ? 'fa-solid' : 'fa-regular'} fa-heart" aria-hidden="true"></i>`;
+        });
+
+        footer.append(price, favorite);
+        card.append(title, description, footer);
         featuredCards.appendChild(card);
       });
     };
