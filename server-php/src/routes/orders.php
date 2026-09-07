@@ -2,6 +2,10 @@
 
 function ordersCreate(): void
 {
+    $rateKey = 'orders:' . getClientIp();
+    rateLimitCheck($rateKey, 10, 3600); // 10 orders per hour per IP
+    rateLimitRecordAttempt($rateKey);
+
     $body = getJsonBody();
 
     $collectionId = $body['collectionId'] ?? null;

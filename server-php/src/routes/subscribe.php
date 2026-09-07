@@ -2,6 +2,10 @@
 
 function subscribeCreate(): void
 {
+    $rateKey = 'subscribe:' . getClientIp();
+    rateLimitCheck($rateKey, 5, 3600); // 5 signups per hour per IP
+    rateLimitRecordAttempt($rateKey);
+
     $body = getJsonBody();
     $email = trim($body['email'] ?? '');
 

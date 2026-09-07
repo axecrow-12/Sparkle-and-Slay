@@ -37,6 +37,7 @@ if ($origin) {
     // the README's python -m http.server step uses, so setup still
     header('Access-Control-Allow-Origin: http://localhost:5500');
 } else {
+    //Work to be done ( Before Deployment )- add reminder to phone
     // No trusted origin configured, and this is not local development.
     // Deliberately do not fall back to a wildcard here, that would let
     // any website on the internet make requests against this API using
@@ -57,6 +58,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 set_exception_handler(function (Throwable $e) {
     error_log($e->getMessage());
     jsonResponse(['error' => 'Something went wrong.'], 500);
+});
+
+// set_exception_handler only catches things that get thrown. A genuine
+// PHP fatal error (a TypeError that somehow isn't caught, memory
+// exhaustion, a broken require) skips that entirely and, with
+// display_errors off, previously meant the client got back nothing at
+// all, exactly the silent, blank failure that took an entire session to
+// track down earlier. This catches that category specifically.
+register_shutdown_function(function () {
+    $error = error_get_last();
+    if ($error === null) {
+        return; // clean shutdown, nothing to do
+    }
+
+    $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR];
+    if (!in_array($error['type'], $fatalTypes, true)) {
+        return; // just a warning or notice, not what killed the request
+    }
+
+    error_log("Fatal error: {$error['message']} in {$error['file']}:{$error['line']}");
+
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Something went wrong.']);
+    }
 });
 
 $method = $_SERVER['REQUEST_METHOD'];

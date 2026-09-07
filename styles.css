@@ -3553,7 +3553,7 @@ body.home-page {
   bottom: -25px;
   width: 155px;
   height: 220px;
-  opacity: 0.32;
+  opacity: 1;
   background: radial-gradient(ellipse at 18% 85%, #7f9b76 0 8%, transparent 9%), radial-gradient(ellipse at 48% 59%, #7f9b76 0 10%, transparent 11%), radial-gradient(ellipse at 72% 31%, #7f9b76 0 12%, transparent 13%), linear-gradient(65deg, transparent 48%, #7f9b76 49% 51%, transparent 52%);
   transform: rotate(-19deg);
 }
