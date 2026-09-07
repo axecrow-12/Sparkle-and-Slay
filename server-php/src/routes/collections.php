@@ -4,24 +4,37 @@ function collectionsList(): void
 {
     $db = getDb();
 
-    // Opt in only. No page parameter means the exact same full-array
-    // response the storefront already expects, so this cannot break
-    // anything currently deployed. Send ?page=1 to get the new shape.
+    $search = trim((string) ($_GET['search'] ?? ''));
+    $where = '';
+    $params = [];
+    if ($search !== '') {
+        $where = ' WHERE name LIKE :search OR description LIKE :search';
+        $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search);
+        $params['search'] = '%' . $escaped . '%';
+    }
+
     if (!isset($_GET['page'])) {
-        $rows = $db->query(
-            'SELECT id, name, description, image, video, price, stock_status, colors, sizes, rating_average, rating_count FROM collections ORDER BY created_at DESC'
-        )->fetchAll();
-        jsonResponse($rows);
+        $stmt = $db->prepare(
+            "SELECT id, name, description, image, video, price, stock_status, colors, sizes, rating_average, rating_count
+             FROM collections$where ORDER BY created_at DESC"
+        );
+        $stmt->execute($params);
+        jsonResponse($stmt->fetchAll());
     }
 
     [$page, $perPage, $offset] = paginationParams(24);
 
-    $total = (int) $db->query('SELECT COUNT(*) FROM collections')->fetchColumn();
+    $totalStmt = $db->prepare("SELECT COUNT(*) FROM collections$where");
+    $totalStmt->execute($params);
+    $total = (int) $totalStmt->fetchColumn();
 
     $stmt = $db->prepare(
-        'SELECT id, name, description, image, video, price, stock_status, colors, sizes, rating_average, rating_count
-         FROM collections ORDER BY created_at DESC LIMIT :limit OFFSET :offset'
+        "SELECT id, name, description, image, video, price, stock_status, colors, sizes, rating_average, rating_count
+         FROM collections$where ORDER BY created_at DESC LIMIT :limit OFFSET :offset"
     );
+    foreach ($params as $key => $value) {
+        $stmt->bindValue($key, $value);
+    }
     $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
