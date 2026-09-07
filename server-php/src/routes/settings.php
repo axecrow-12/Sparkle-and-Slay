@@ -35,6 +35,7 @@ function settingsGet(): void
 
 function settingsPublicGet(): void
 {
+    header('Cache-Control: public, max-age=60');
     $settings = settingsRead();
     jsonResponse([
         'store_name' => $settings['store_name'],

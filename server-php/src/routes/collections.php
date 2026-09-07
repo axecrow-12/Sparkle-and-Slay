@@ -2,6 +2,9 @@
 
 function collectionsList(): void
 {
+    if (!isset($_GET['search'])) {
+        header('Cache-Control: public,max-age=60');
+    }
     $db = getDb();
 
     $search = trim((string) ($_GET['search'] ?? ''));
