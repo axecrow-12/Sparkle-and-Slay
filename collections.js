@@ -757,17 +757,49 @@ listEl.innerHTML = '<div class="loading-skeleton" aria-label="Loading collection
 emptyMessage.style.display = 'none';
 
 const clearSearchBtn = document.getElementById('clear-search');
+let searchDebounceTimer;
+const SEARCH_DEBOUNCE_MS = 300;
+
+async function performServerSearch(query) {
+    try {
+        const response = await fetch(`${API_BASE}/collections?search=${encodeURIComponent(query)}`);
+        if (!response.ok) throw new Error('Search failed.');
+        collections = await response.json();
+    } catch (error) {
+        // A hiccup mid-search just leaves the previously shown results in
+        // place rather than clearing the page, the next keystroke or the
+        // next successful search corrects it.
+    }
+    renderCollections();
+}
+
 searchInput?.addEventListener('input', () => {
-  if (clearSearchBtn) clearSearchBtn.hidden = !searchInput.value;
-  renderCollections();
-});
-clearSearchBtn?.addEventListener('click', () => {
-  searchInput.value = '';
-  clearSearchBtn.hidden = true;
-  searchInput.focus();
-  renderCollections();
+    if (clearSearchBtn) clearSearchBtn.hidden = !searchInput.value;
+
+    if (!USE_BACKEND) {
+        // No live API in this mode, collections.json is all there is, so
+        // keep filtering the data already in memory exactly as before.
+        renderCollections();
+        return;
+    }
+
+    window.clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = window.setTimeout(() => {
+        performServerSearch(searchInput.value.trim());
+    }, SEARCH_DEBOUNCE_MS);
 });
 
+clearSearchBtn?.addEventListener('click', () => {
+    searchInput.value = '';
+    clearSearchBtn.hidden = true;
+    searchInput.focus();
+    window.clearTimeout(searchDebounceTimer);
+    if (USE_BACKEND) {
+        performServerSearch('');
+    } else {
+        renderCollections();
+    }
+});
 focusSearchBtn?.addEventListener('click', () => {
   document.getElementById('shop-collection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   window.setTimeout(() => searchInput?.focus(), 350);
