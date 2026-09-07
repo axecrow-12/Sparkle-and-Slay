@@ -16,6 +16,20 @@ function getJsonBody(): array
 }
 
 /**
+ * Reads page and perPage from the query string, clamped to sane bounds
+ * so nobody can request perPage=999999 and defeat the point of paging.
+ */
+function paginationParams(int $defaultPerPage = 20, int $maxPerPage = 100): array
+{
+    $page = max(1, (int) ($_GET['page'] ?? 1));
+    $perPage = (int) ($_GET['perPage'] ?? $defaultPerPage);
+    $perPage = max(1, min($maxPerPage, $perPage));
+    $offset = ($page - 1) * $perPage;
+
+    return [$page, $perPage, $offset];
+}
+
+/**
  * Clamps an admin-provided average rating to the valid 0-5 range, or
  * returns null when absent/invalid so it is stored as "no rating yet".
  */

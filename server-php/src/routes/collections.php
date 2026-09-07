@@ -3,11 +3,30 @@
 function collectionsList(): void
 {
     $db = getDb();
-    $rows = $db->query(
-        'SELECT id, name, description, image, video, price, stock_status, colors, sizes, rating_average, rating_count FROM collections ORDER BY created_at DESC'
-    )->fetchAll();
 
-    jsonResponse($rows);
+    // Opt in only. No page parameter means the exact same full-array
+    // response the storefront already expects, so this cannot break
+    // anything currently deployed. Send ?page=1 to get the new shape.
+    if (!isset($_GET['page'])) {
+        $rows = $db->query(
+            'SELECT id, name, description, image, video, price, stock_status, colors, sizes, rating_average, rating_count FROM collections ORDER BY created_at DESC'
+        )->fetchAll();
+        jsonResponse($rows);
+    }
+
+    [$page, $perPage, $offset] = paginationParams(24);
+
+    $total = (int) $db->query('SELECT COUNT(*) FROM collections')->fetchColumn();
+
+    $stmt = $db->prepare(
+        'SELECT id, name, description, image, video, price, stock_status, colors, sizes, rating_average, rating_count
+         FROM collections ORDER BY created_at DESC LIMIT :limit OFFSET :offset'
+    );
+    $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+
+    jsonResponse(['data' => $stmt->fetchAll(), 'total' => $total, 'page' => $page, 'perPage' => $perPage]);
 }
 
 function collectionsGetOne(string $id): void

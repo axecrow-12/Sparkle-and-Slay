@@ -62,7 +62,7 @@ set_exception_handler(function (Throwable $e) {
 
 // set_exception_handler only catches things that get thrown. A genuine
 // PHP fatal error (a TypeError that somehow isn't caught, memory
-// exhaustion, a broken require) skips that entirely and, with
+// exhaustion, a broken requirement) skips that entirely and, with
 // display_errors off, previously meant the client got back nothing at
 // all, exactly the silent, blank failure that took an entire session to
 // track down earlier. This catches that category specifically.

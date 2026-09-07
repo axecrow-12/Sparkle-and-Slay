@@ -31,6 +31,14 @@ function subscribeList(): void
     requireAdmin();
 
     $db = getDb();
-    $rows = $db->query('SELECT email, created_at FROM subscribers ORDER BY created_at DESC')->fetchAll();
-    jsonResponse($rows);
+    [$page, $perPage, $offset] = paginationParams(50);
+
+    $total = (int) $db->query('SELECT COUNT(*) FROM subscribers')->fetchColumn();
+
+    $stmt = $db->prepare('SELECT email, created_at FROM subscribers ORDER BY created_at DESC LIMIT :limit OFFSET :offset');
+    $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+
+    jsonResponse(['data' => $stmt->fetchAll(), 'total' => $total, 'page' => $page, 'perPage' => $perPage]);
 }

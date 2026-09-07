@@ -7,6 +7,10 @@ const token = sessionStorage.getItem('sparkleAdminToken');
 const adminStatus = document.getElementById('admin-status');
 let collections = [];
 let editingId = null;
+document.getElementById('admin-logo').addEventListener('error', function handleLogoError() {
+    this.removeEventListener('error', handleLogoError);
+    this.src = 'photos/slay.jpeg';
+}, { once: true });
 
 function showStatus(message, type = 'info') {
   SparkleUI.announce(adminStatus, message, type);
@@ -270,10 +274,9 @@ function formatPaymentAmount(amount) {
 }
 
 function renderPayments(payments) {
-  const list = document.getElementById('payment-list');
-  list.replaceChildren();
-  document.getElementById('payment-count').textContent = `${payments.length} record${payments.length === 1 ? '' : 's'}`;
-  if (!payments.length) { list.textContent = 'No payment records yet.'; return; }
+    const list = document.getElementById('payment-list');
+    list.replaceChildren();
+    if (!payments.length) { list.textContent = 'No payment records yet.'; return; }
   payments.forEach((payment) => {
     const row = document.createElement('div'); row.className = 'payment-row';
     const details = document.createElement('div');
@@ -288,13 +291,30 @@ function renderPayments(payments) {
   });
 }
 
-async function loadPayments() {
-  try {
-    const response = await fetch(`${API_BASE}/payments`, { headers: authHeaders() });
-    if (handleAuthFailure(response) || !response.ok) throw new Error('Could not load payments.');
-    renderPayments(await response.json());
-  } catch (error) { document.getElementById('payment-list').textContent = 'Payments are unavailable right now.'; }
+let paymentsPage = 1;
+const paymentsPerPage = 20;
+
+async function loadPayments(page = paymentsPage) {
+    try {
+        const response = await fetch(`${API_BASE}/payments?page=${page}&perPage=${paymentsPerPage}`, { headers: authHeaders() });
+        if (handleAuthFailure(response) || !response.ok) throw new Error('Could not load payments.');
+        const result = await response.json();
+        paymentsPage = result.page;
+        renderPayments(result.data);
+
+        document.getElementById('payment-count').textContent = `${result.total} record${result.total === 1 ? '' : 's'}`;
+
+        const totalPages = Math.max(1, Math.ceil(result.total / result.perPage));
+        const pager = document.getElementById('payment-pager');
+        pager.hidden = totalPages <= 1;
+        document.getElementById('payment-page-label').textContent = `Page ${paymentsPage} of ${totalPages}`;
+        document.getElementById('payment-prev').disabled = paymentsPage <= 1;
+        document.getElementById('payment-next').disabled = paymentsPage >= totalPages;
+    } catch (error) { document.getElementById('payment-list').textContent = 'Payments are unavailable right now.'; }
 }
+
+document.getElementById('payment-prev').addEventListener('click', () => loadPayments(paymentsPage - 1));
+document.getElementById('payment-next').addEventListener('click', () => loadPayments(paymentsPage + 1));
 
 async function updatePaymentStatus(id, status) {
   const response = await fetch(`${API_BASE}/payments/${id}/status`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ status }) });
