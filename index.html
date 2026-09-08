@@ -272,8 +272,10 @@
 
     revealItems.forEach(item => observer.observe(item));
 
-    const featuredCards = document.getElementById('featured-cards');
-    featuredCards.innerHTML = '<div class="page-note"><p>Loading collections...</p></div>';
+    showSkeleton(
+  featuredCards,
+  collectionSkeleton(4)
+);
 
     const featuredCollections = [
       {

@@ -137,6 +137,67 @@ window.SparkleUI = (() => {
       if (event.key === 'Escape') close();
     });
   }
-
+  
   return { announce, setBusy, clearFieldError, setFieldError, validateRequired, createDialog, setupMenu };
 })();
+
+/* =========================================================
+   SPARKLE & SLAY — SKELETON HELPERS
+   ========================================================= */
+
+function showSkeleton(container, html) {
+  if (!container) return;
+
+  container.innerHTML = html;
+  container.classList.remove("is-hidden");
+}
+
+function hideSkeleton(container) {
+  if (!container) return;
+
+  container.classList.add("is-hidden");
+
+  setTimeout(() => {
+    if (container) {
+      container.innerHTML = "";
+      container.classList.remove("is-hidden");
+    }
+  }, 300);
+}
+
+function productSkeleton(count = 4) {
+  return Array.from({ length: count }, () => `
+    <article class="product-skeleton">
+      <div class="skeleton product-skeleton-image"></div>
+      <div class="skeleton product-skeleton-title"></div>
+      <div class="skeleton product-skeleton-description"></div>
+      <div class="skeleton product-skeleton-price"></div>
+    </article>
+  `).join("");
+}
+
+function collectionSkeleton(count = 4) {
+  return Array.from({ length: count }, () => `
+    <article class="collection-skeleton">
+      <div class="skeleton collection-skeleton-image"></div>
+      <div class="skeleton collection-skeleton-title"></div>
+      <div class="skeleton collection-skeleton-text"></div>
+      <div class="skeleton collection-skeleton-text"></div>
+    </article>
+  `).join("");
+}
+
+function adminProductSkeleton(count = 5) {
+  return Array.from({ length: count }, () => `
+    <div class="admin-product-skeleton">
+      <div class="skeleton admin-product-skeleton-image"></div>
+
+      <div class="admin-product-skeleton-content">
+        <div class="skeleton admin-product-skeleton-title"></div>
+        <div class="skeleton admin-product-skeleton-text"></div>
+      </div>
+
+      <div class="skeleton admin-product-skeleton-action"></div>
+    </div>
+  `).join("");
+}

@@ -1,5 +1,8 @@
 <?php
 
+use FastRoute\RouteCollector;
+use function FastRoute\simpleDispatcher;
+
 require __DIR__ . '/../vendor/autoload.php';
 loadEnv(__DIR__ . '/../.env');
 
@@ -78,111 +81,63 @@ if ($path === '') {
     $path = '/';
 }
 
-// Let the built-in server serve uploaded media files directly.
+
 if (in_array($method, ['GET', 'HEAD'], true) && $path !== '/' && is_file(__DIR__ . $path)) {
     return false;
 }
 
-// --- Health check ---
-if ($method === 'GET' && $path === '/health') {
-    jsonResponse(['status' => 'ok']);
-}
+$dispatcher = simpleDispatcher(function (RouteCollector $r) {
+    $r->addRoute('GET', '/health', function () {
+        jsonResponse(['status' => 'ok']);
+    });
 
-// --- Auth ---
-if ($method === 'GET' && $path === '/auth/status') {
-    authStatus();
-}
-if ($method === 'POST' && $path === '/auth/setup') {
-    authSetup();
-}
-if ($method === 'POST' && $path === '/auth/login') {
-    authLogin();
-}
-if ($method === 'PUT' && $path === '/auth/password') {
-    authChangePassword();
-}
-if ($method === 'POST' && $path === '/uploads') {
-    uploadMedia();
-}
+    $r->addRoute('GET', '/auth/status', 'authStatus');
+    $r->addRoute('POST', '/auth/setup', 'authSetup');
+    $r->addRoute('POST', '/auth/login', 'authLogin');
+    $r->addRoute('PUT', '/auth/password', 'authChangePassword');
+    $r->addRoute('POST', '/uploads', 'uploadMedia');
 
-// --- Collections (and the /products alias) ---
-if (preg_match('#^/(collections|products)$#', $path, $m)) {
-    if ($method === 'GET') {
-        collectionsList();
+    // /products stays as a plain alias of /collections, same handlers,
+    // exactly matching the original preg_match('#^/(collections|products)#')
+    foreach (['/collections', '/products'] as $base) {
+        $r->addRoute('GET', $base, 'collectionsList');
+        $r->addRoute('POST', $base, 'collectionsCreate');
+        $r->addRoute('GET', "$base/{id:\d+}", 'collectionsGetOne');
+        $r->addRoute('PUT', "$base/{id:\d+}", 'collectionsUpdate');
+        $r->addRoute('DELETE', "$base/{id:\d+}", 'collectionsDelete');
     }
-    if ($method === 'POST') {
-        collectionsCreate();
-    }
-}
-if (preg_match('#^/(collections|products)/(\d+)$#', $path, $m)) {
-    $id = $m[2];
-    if ($method === 'GET') {
-        collectionsGetOne($id);
-    }
-    if ($method === 'PUT') {
-        collectionsUpdate($id);
-    }
-    if ($method === 'DELETE') {
-        collectionsDelete($id);
-    }
-}
 
-// --- Subscribe ---
-if ($path === '/subscribe') {
-    if ($method === 'POST') {
-        subscribeCreate();
-    }
-    if ($method === 'GET') {
-        subscribeList();
-    }
-}
+    $r->addRoute('POST', '/subscribe', 'subscribeCreate');
+    $r->addRoute('GET', '/subscribe', 'subscribeList');
 
-// --- Orders ---
-if ($path === '/orders') {
-    if ($method === 'POST') {
-        ordersCreate();
-    }
-    if ($method === 'GET') {
-        ordersList();
-    }
-}
-if ($method === 'POST' && $path === '/checkout') {
-    ecocashCheckout();
-}
-if ($method === 'POST' && $path === '/ecocash/notify') {
-    ecocashNotify();
-}
-if ($method === 'GET' && preg_match('#^/checkout/([a-f0-9]{64})$#', $path, $m)) {
-    ecocashCheckoutStatus($m[1]);
-}
-if ($method === 'GET' && $path === '/orders/summary') {
-    ordersSummary();
-}
-if ($method === 'GET' && $path === '/payments') {
-    paymentsList();
-}
-if ($method === 'PUT' && preg_match('#^/payments/(\d+)/status$#', $path, $m)) {
-    paymentsUpdateStatus($m[1]);
-}
-if ($method === 'GET' && $path === '/payments/report') {
-    paymentsReport();
-}
+    $r->addRoute('POST', '/orders', 'ordersCreate');
+    $r->addRoute('GET', '/orders', 'ordersList');
+    $r->addRoute('POST', '/checkout', 'ecocashCheckout');
+    $r->addRoute('POST', '/ecocash/notify', 'ecocashNotify');
+    $r->addRoute('GET', '/checkout/{token:[a-f0-9]{64}}', 'ecocashCheckoutStatus');
+    $r->addRoute('GET', '/orders/summary', 'ordersSummary');
+    $r->addRoute('GET', '/payments', 'paymentsList');
+    $r->addRoute('PUT', '/payments/{id:\d+}/status', 'paymentsUpdateStatus');
+    $r->addRoute('GET', '/payments/report', 'paymentsReport');
 
-if ($path === '/settings') {
-    if ($method === 'GET') {
-        settingsGet();
-    }
-    if ($method === 'PUT') {
-        settingsUpdate();
-    }
-}
-if ($method === 'GET' && $path === '/settings/public') {
-    settingsPublicGet();
-}
-if (preg_match('#^/orders/(\d+)/status$#', $path, $m)) {
-    if ($method === 'PUT') {
-        ordersUpdateStatus($m[1]);
-    }
-}
+    $r->addRoute('GET', '/settings', 'settingsGet');
+    $r->addRoute('PUT', '/settings', 'settingsUpdate');
+    $r->addRoute('GET', '/settings/public', 'settingsPublicGet');
 
-jsonResponse(['error' => 'Not found.'], 404);
+    $r->addRoute('PUT', '/orders/{id:\d+}/status', 'ordersUpdateStatus');
+});
+
+$routeInfo = $dispatcher->dispatch($method, $path);
+
+switch ($routeInfo[0]) {
+    case FastRoute\Dispatcher::FOUND:
+        $handler = $routeInfo[1];
+        $handler(...array_values($routeInfo[2]));
+        break;
+
+    case FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
+    case FastRoute\Dispatcher::NOT_FOUND:
+    default:
+        jsonResponse(['error' => 'Not found.'], 404);
+        break;
+}

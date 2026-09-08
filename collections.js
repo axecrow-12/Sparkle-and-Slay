@@ -351,7 +351,7 @@ function renderCollections() {
   SparkleUI.announce(resultsMessage, `${filteredCollections.length} product${filteredCollections.length === 1 ? '' : 's'} shown${query ? ` for "${query}"` : ''}.`, 'info');
   filteredCollections.forEach((item) => {
     const card = document.createElement('article');
-    card.className = 'collection-card';
+    card.className = 'card reveal';
     card.draggable = true;
     card.addEventListener('dragstart', (event) => {
       event.dataTransfer.effectAllowed = 'copy';
