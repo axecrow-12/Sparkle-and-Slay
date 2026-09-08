@@ -1,12 +1,9 @@
 <?php
 
-require __DIR__ . '/../src/env.php';
+require __DIR__ . '/../vendor/autoload.php';
 loadEnv(__DIR__ . '/../.env');
 
-// APP_ENV controls how much PHP tells the browser when something breaks.
-// Anywhere that is not explicitly local development is treated as
-// production, fail-safe by default, rather than accidentally leaking
-// stack traces because someone forgot to set this on a real host.
+
 $appEnv = getenv('APP_ENV') ?: 'production';
 if ($appEnv === 'local') {
     ini_set('display_errors', '1');
@@ -15,19 +12,6 @@ if ($appEnv === 'local') {
     ini_set('display_errors', '0');
     ini_set('log_errors', '1');
 }
-
-require __DIR__ . '/../src/db.php';
-require __DIR__ . '/../src/jwt.php';
-require __DIR__ . '/../src/helpers.php';
-require __DIR__ . '/../src/rateLimiter.php';
-require __DIR__ . '/../src/routes/auth.php';
-require __DIR__ . '/../src/routes/collections.php';
-require __DIR__ . '/../src/routes/subscribe.php';
-require __DIR__ . '/../src/routes/orders.php';
-require __DIR__ . '/../src/routes/settings.php';
-require __DIR__ . '/../src/upload.php';
-require __DIR__ . '/../src/routes/payments.php';
-require __DIR__ . '/../src/routes/ecocash.php';
 
 $origin = getenv('FRONTEND_ORIGIN');
 if ($origin) {
