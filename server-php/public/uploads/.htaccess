@@ -10,3 +10,11 @@
 # Belt and braces for older Apache configs that read this directive instead
 Options -ExecCGI
 php_flag engine off
+
+# Never let a browser second-guess the type of a user-uploaded file, and give
+# it no ambient authority if it is ever served as a document.
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Content-Security-Policy "default-src 'none'"
+    Header always set Content-Disposition "inline"
+</IfModule>

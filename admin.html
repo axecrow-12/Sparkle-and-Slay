@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Workspace | Sparkle & Slay</title>
+  <title>Admin Workspace | Sparkle &amp; Slay</title>
+  <meta name="description" content="Sparkle &amp; Slay store owner workspace." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="photos/A5ecfa8534cd84b8c9e91661fcf73dfc0C-removebg-preview.png" />
   <link rel="stylesheet" href="styles.css" />
   <script src="config.js"></script>
   <script>if (!sessionStorage.getItem('sparkleAdminToken')) window.location.href = 'login.html';</script>
@@ -11,10 +14,11 @@
 <body class="admin-page">
   <div class="admin-shell">
     <aside class="admin-sidebar" id="admin-sidebar">
-        <div class="admin-brand"><img id="admin-logo" src="photos/A5ecfa8534cd84b8c9e91661fcf73dfc0C-removebg-preview.png" alt="Sparkle & Slay logo" /><div><strong>Sparkle & Slay</strong><span>Owner workspace</span></div></div>
+        <div class="admin-brand"><img id="admin-logo" src="photos/A5ecfa8534cd84b8c9e91661fcf73dfc0C-removebg-preview.png" alt="Sparkle &amp; Slay logo" width="500" height="500" decoding="async" /><div><strong>Sparkle &amp; Slay</strong><span>Owner workspace</span></div></div>
       <nav class="admin-nav" aria-label="Admin sections">
         <button class="admin-nav-link is-active" type="button" data-view="dashboard" aria-current="page"><img src="photos/chart-no-axes-combined.svg" alt="" aria-hidden="true" /><span>Dashboard</span></button>
         <button class="admin-nav-link" type="button" data-view="shop"><img src="photos/folder-kanban.svg" alt="" aria-hidden="true" /><span>Shop management</span></button>
+        <button class="admin-nav-link" type="button" data-view="orders"><img src="photos/shopping-cart.svg" alt="" aria-hidden="true" /><span>Orders</span></button>
         <button class="admin-nav-link" type="button" data-view="payments"><img src="photos/credit-card.svg" alt="" aria-hidden="true" /><span>Payments</span></button>
         <button class="admin-nav-link" type="button" data-view="settings"><img src="photos/settings.svg" alt="" aria-hidden="true" /><span>Settings</span></button>
       </nav>
@@ -27,20 +31,47 @@
         <p id="admin-status" class="status-message" role="status" aria-live="polite" hidden></p>
         <section class="admin-view is-active" id="view-dashboard" data-view-panel="dashboard" aria-labelledby="page-title">
           <div class="admin-intro"><div><p class="admin-kicker">Good to see you</p><h2>Keep the collection moving.</h2><p class="admin-muted">A quick read on your shop performance and the pieces customers are choosing most.</p></div><button class="primary-button" type="button" data-open-view="shop">Add a product</button></div>
-          <div class="metric-grid" id="dashboard-metrics"><article class="metric-card"><span>Products</span><strong id="metric-products">—</strong><small>in your shop</small></article><article class="metric-card"><span>Units sold</span><strong id="metric-units">—</strong><small>all-time quantity</small></article><article class="metric-card"><span>Pending orders</span><strong id="metric-orders">—</strong><small>awaiting action</small></article></div>
-          <div class="dashboard-grid"><section class="workspace-panel trend-panel"><div class="panel-heading"><div><p class="admin-kicker">Sales insight</p><h3>Most bought items</h3></div><span class="panel-period">All time</span></div><div id="trend-list" class="trend-list"><p class="admin-muted">Loading sales insight...</p></div></section><section class="workspace-panel activity-panel"><div class="panel-heading"><div><p class="admin-kicker">Inventory pulse</p><h3>Shop snapshot</h3></div></div><div id="inventory-summary" class="inventory-summary"><p class="admin-muted">Loading inventory...</p></div></section></div>
+          <div class="metric-grid" id="dashboard-metrics"><article class="metric-card"><span>Products</span><strong id="metric-products"><span class="skeleton metric-skeleton" aria-hidden="true"></span></strong><small>in your shop</small></article><article class="metric-card"><span>Units sold</span><strong id="metric-units"><span class="skeleton metric-skeleton" aria-hidden="true"></span></strong><small>all-time quantity</small></article><article class="metric-card"><span>Pending orders</span><strong id="metric-orders"><span class="skeleton metric-skeleton" aria-hidden="true"></span></strong><small>awaiting action</small></article></div>
+          <div class="dashboard-grid"><section class="workspace-panel trend-panel"><div class="panel-heading"><div><p class="admin-kicker">Sales insight</p><h3>Most bought items</h3></div><span class="panel-period">All time</span></div><div id="trend-list" class="trend-list">
+  <div class="trend-skeleton" aria-hidden="true"><div class="trend-skeleton-main"><span class="skeleton trend-skeleton-name"></span><span class="skeleton trend-skeleton-bar"></span></div><span class="skeleton" style="width:45px;height:14px;"></span></div>
+  <div class="trend-skeleton" aria-hidden="true"><div class="trend-skeleton-main"><span class="skeleton trend-skeleton-name"></span><span class="skeleton trend-skeleton-bar"></span></div><span class="skeleton" style="width:45px;height:14px;"></span></div>
+  <div class="trend-skeleton" aria-hidden="true"><div class="trend-skeleton-main"><span class="skeleton trend-skeleton-name"></span><span class="skeleton trend-skeleton-bar"></span></div><span class="skeleton" style="width:45px;height:14px;"></span></div>
+</div></section><section class="workspace-panel activity-panel"><div class="panel-heading"><div><p class="admin-kicker">Inventory pulse</p><h3>Shop snapshot</h3></div></div><div id="inventory-summary" class="inventory-summary">
+  <div class="inventory-skeleton" aria-hidden="true">
+    <div class="skeleton inventory-skeleton-row"></div>
+    <div class="skeleton inventory-skeleton-row"></div>
+    <div class="skeleton inventory-skeleton-row"></div>
+  </div>
+</div></section></div>
         </section>
 
         <section class="admin-view" id="view-shop" data-view-panel="shop" aria-labelledby="shop-title" hidden>
           <div class="admin-intro"><div><p class="admin-kicker">Catalog</p><h2 id="shop-title">Shop management</h2><p class="admin-muted">Update prices, availability, and the pieces customers see in your storefront.</p></div><button class="primary-button" type="button" id="new-product-btn">New product</button></div>
           <div class="workspace-panel form-section" id="product-form-panel" hidden><div class="panel-heading"><div><p class="admin-kicker">Catalog editor</p><h3 id="product-form-title">Add a product</h3></div></div><form id="admin-form" class="admin-product-form" novalidate><label>Product name<input type="text" id="admin-name" placeholder="e.g. Satin evening dress" required aria-describedby="admin-name-error" /><span id="admin-name-error" class="field-error" hidden></span></label><label>Description<textarea id="admin-description" placeholder="Describe the fit, fabric, and occasion" required aria-describedby="admin-description-error"></textarea><span id="admin-description-error" class="field-error" hidden></span></label><div class="form-grid"><label>Price (USD)<input type="number" id="admin-price" min="0" step="0.01" required aria-describedby="admin-price-error" /><span id="admin-price-error" class="field-error" hidden></span></label><label>Availability<select id="admin-stock-status"><option value="in_stock">In stock</option><option value="low_stock">Low stock</option><option value="out_of_stock">Out of stock</option></select></label></div><div class="form-grid"><label>Image path or URL<input type="text" id="admin-image" placeholder="photos/product.jpg" /><input type="file" id="admin-image-file" accept="image/jpeg,image/png,image/webp" /><img id="admin-image-preview" class="admin-media-preview" alt="Selected product image preview" hidden /></label><label>Video path or URL<input type="text" id="admin-video" placeholder="Optional product video" /><input type="file" id="admin-video-file" accept="video/mp4,video/webm" /><video id="admin-video-preview" class="admin-media-preview" controls hidden></video></label></div><div class="form-grid"><label>Colors (comma-separated, optional)<input type="text" id="admin-colors" placeholder="e.g. Black, Charcoal Gray, Cream" /></label><label>Sizes (comma-separated, optional)<input type="text" id="admin-sizes" placeholder="e.g. S, M, L, XL" /></label></div><div class="form-grid"><label>Average rating 0-5 (optional)<input type="number" id="admin-rating-average" min="0" max="5" step="0.1" placeholder="e.g. 4.5" /></label><label>Number of ratings (optional)<input type="number" id="admin-rating-count" min="0" step="1" placeholder="e.g. 12" /></label></div><p class="admin-muted">Only fill in rating fields if you have real customer feedback (in-store, WhatsApp, or social media) to reflect — leave blank otherwise.</p><div class="form-actions"><button class="primary-button" type="submit">Add product</button><button class="secondary-button" type="button" id="cancel-product">Cancel</button></div></form></div>
-          <div class="workspace-panel products-panel"><div class="panel-heading"><div><p class="admin-kicker">Your catalog</p><h3>Products</h3></div><span id="product-count" class="panel-period">Loading</span></div><div id="admin-list" class="product-list"></div><div id="no-collections" class="empty-state" hidden><strong>No products yet</strong><p>Add your first product to start building the storefront.</p></div></div>
+          <div class="workspace-panel products-panel"><div class="panel-heading"><div><p class="admin-kicker">Your catalog</p><h3>Products</h3></div><div class="panel-heading-meta"><label class="archived-toggle"><input type="checkbox" id="products-archived" /> Show archived</label><span id="product-count" class="panel-period">Loading</span></div></div><div id="admin-list" class="product-list record-table-wrap"><div class="admin-product-skeleton" aria-hidden="true"><div class="skeleton admin-product-skeleton-image"></div><div class="admin-product-skeleton-content"><div class="skeleton admin-product-skeleton-title"></div><div class="skeleton admin-product-skeleton-text"></div></div><div class="skeleton admin-product-skeleton-action"></div></div><div class="admin-product-skeleton" aria-hidden="true"><div class="skeleton admin-product-skeleton-image"></div><div class="admin-product-skeleton-content"><div class="skeleton admin-product-skeleton-title"></div><div class="skeleton admin-product-skeleton-text"></div></div><div class="skeleton admin-product-skeleton-action"></div></div><div class="admin-product-skeleton" aria-hidden="true"><div class="skeleton admin-product-skeleton-image"></div><div class="admin-product-skeleton-content"><div class="skeleton admin-product-skeleton-title"></div><div class="skeleton admin-product-skeleton-text"></div></div><div class="skeleton admin-product-skeleton-action"></div></div><div class="admin-product-skeleton" aria-hidden="true"><div class="skeleton admin-product-skeleton-image"></div><div class="admin-product-skeleton-content"><div class="skeleton admin-product-skeleton-title"></div><div class="skeleton admin-product-skeleton-text"></div></div><div class="skeleton admin-product-skeleton-action"></div></div><div class="admin-product-skeleton" aria-hidden="true"><div class="skeleton admin-product-skeleton-image"></div><div class="admin-product-skeleton-content"><div class="skeleton admin-product-skeleton-title"></div><div class="skeleton admin-product-skeleton-text"></div></div><div class="skeleton admin-product-skeleton-action"></div></div></div><div id="no-collections" class="empty-state" hidden><strong>No products yet</strong><p>Add your first product to start building the storefront.</p></div></div>
+        </section>
+
+        <section class="admin-view" id="view-orders" data-view-panel="orders" aria-labelledby="orders-title" hidden>
+          <div class="admin-intro"><div><p class="admin-kicker">Fulfilment</p><h2 id="orders-title">Orders</h2><p class="admin-muted">Every order customers have placed, newest first. Update fulfilment status or archive an order you no longer need.</p></div><label class="archived-toggle"><input type="checkbox" id="orders-archived" /> Show archived</label></div>
+          <section class="workspace-panel records-panel"><div class="panel-heading"><div><p class="admin-kicker">Order records</p><h3>All orders</h3></div><span id="orders-count" class="panel-period">Loading</span></div><div id="orders-table" class="record-table-wrap"><div class="payment-skeleton skeleton" aria-hidden="true"></div><div class="payment-skeleton skeleton" aria-hidden="true"></div><div class="payment-skeleton skeleton" aria-hidden="true"></div></div><div class="record-pager" id="orders-pager" hidden><button class="secondary-button" type="button" id="orders-prev">Previous</button><span id="orders-page-label"></span><button class="secondary-button" type="button" id="orders-next">Next</button></div></section>
         </section>
 
         <section class="admin-view" id="view-payments" data-view-panel="payments" aria-labelledby="payments-title" hidden>
-          <div class="admin-intro"><div><p class="admin-kicker">EcoCash ledger</p><h2 id="payments-title">Payments</h2><p class="admin-muted">Review submitted references, confirm payments, and print sales reports.</p></div><div class="report-actions"><select id="report-period" aria-label="Report period"><option value="weekly">Weekly report</option><option value="monthly">Monthly report</option></select><button class="secondary-button" type="button" id="load-report">Load report</button><button class="primary-button" type="button" id="print-report">Print report</button></div></div>
-          <section class="workspace-panel report-panel" id="payment-report"><div class="panel-heading"><div><p class="admin-kicker">Sales report</p><h3 id="report-title">Weekly payments</h3></div><span id="report-total" class="panel-period">Loading</span></div><div id="report-table" class="report-table"><p class="admin-muted">Choose a period to load a report.</p></div></section>
-            <section class="workspace-panel payments-panel"><div class="panel-heading"><div><p class="admin-kicker">Payment records</p><h3>Recent EcoCash submissions</h3></div><span id="payment-count" class="panel-period">Loading</span></div><div id="payment-list" class="payment-list"><p class="admin-muted">Loading payments...</p></div><div class="payment-pager" id="payment-pager" hidden><button class="secondary-button" type="button" id="payment-prev">Previous</button><span id="payment-page-label"></span><button class="secondary-button" type="button" id="payment-next">Next</button></div></section>
+          <div class="admin-intro"><div><p class="admin-kicker">EcoCash ledger</p><h2 id="payments-title">Payments</h2><p class="admin-muted">Review submitted references, confirm payments, and build a tailored sales report.</p></div></div>
+          <section class="workspace-panel report-panel" id="payment-report"><div class="panel-heading"><div><p class="admin-kicker">Sales report</p><h3 id="report-title">Custom sales report</h3></div><span id="report-total" class="panel-period">Not loaded</span></div>
+            <form class="report-controls" id="report-controls">
+              <label>From<input type="date" id="report-from" /></label>
+              <label>To<input type="date" id="report-to" /></label>
+              <label>Group by<select id="report-group"><option value="period">Time period</option><option value="product">By product</option><option value="customer">By customer</option></select></label>
+              <label id="report-interval-wrap">Interval<select id="report-interval"><option value="day">Daily</option><option value="week" selected>Weekly</option><option value="month">Monthly</option></select></label>
+              <label>Status<select id="report-status"><option value="all">All statuses</option><option value="verified">Verified</option><option value="pending">Pending</option><option value="rejected">Rejected</option></select></label>
+              <label>Method<select id="report-method"><option value="all">All methods</option><option value="ecocash">EcoCash</option></select></label>
+              <div class="report-controls-actions"><button class="primary-button" type="submit" id="load-report">Load report</button><button class="secondary-button" type="button" id="export-report">Export CSV</button><button class="secondary-button" type="button" id="print-report">Print</button></div>
+            </form>
+            <p id="report-summary" class="report-summary" hidden></p>
+            <div id="report-table" class="record-table-wrap"><p class="record-table-empty">Choose your filters and load the report.</p></div>
+          </section>
+            <section class="workspace-panel payments-panel"><div class="panel-heading"><div><p class="admin-kicker">Payment records</p><h3>Recent EcoCash submissions</h3></div><div class="panel-heading-meta"><label class="archived-toggle"><input type="checkbox" id="payments-archived" /> Show archived</label><span id="payment-count" class="panel-period">Loading</span></div></div><div id="payment-list" class="record-table-wrap"><div class="payment-skeleton skeleton" aria-hidden="true"></div><div class="payment-skeleton skeleton" aria-hidden="true"></div><div class="payment-skeleton skeleton" aria-hidden="true"></div><div class="payment-skeleton skeleton" aria-hidden="true"></div></div><div class="record-pager" id="payment-pager" hidden><button class="secondary-button" type="button" id="payment-prev">Previous</button><span id="payment-page-label"></span><button class="secondary-button" type="button" id="payment-next">Next</button></div></section>
         </section>
 
         <section class="admin-view" id="view-settings" data-view-panel="settings" aria-labelledby="settings-title" hidden><div class="admin-intro"><div><p class="admin-kicker">Workspace preferences</p><h2 id="settings-title">Settings</h2><p class="admin-muted">Keep your account secure and your storefront details current.</p></div></div><div class="settings-grid"><section class="workspace-panel"><div class="panel-heading"><div><p class="admin-kicker">Public storefront</p><h3>Store details</h3></div></div><form id="store-settings-form" class="settings-form"><label>Store name<input id="setting-store-name" type="text" value="Sparkle & Slay" required /></label><label>Email<input id="setting-email" type="email" value="sales@sparkleandslay.com" required /></label><label>Phone<input id="setting-phone" type="tel" value="+263 77 659 3476" /></label><label>WhatsApp number<input id="setting-whatsapp" type="tel" value="+263776593476" /></label><label>EcoCash merchant number<input id="setting-ecocash" type="tel" value="0783 123 456" required /></label><label>Address<textarea id="setting-address">Corner Robert and Angwa, NiceWear Mall Shop 2, Harare, Zimbabwe</textarea></label><button class="primary-button" type="submit">Save store details</button></form></section><section class="workspace-panel"><div class="panel-heading"><div><p class="admin-kicker">Account security</p><h3>Change password</h3></div></div><form id="password-form" class="settings-form"><label>Current password<input id="current-password" type="password" required /></label><label>New password<input id="new-password" type="password" minlength="8" required /></label><label>Confirm new password<input id="confirm-password" type="password" minlength="8" required /></label><button class="secondary-button" type="submit">Update password</button></form></section></div></section>
@@ -48,6 +79,28 @@
     </div>
   </div>
   <div class="mobile-sidebar-backdrop" id="sidebar-backdrop" hidden></div>
+
+  <div class="admin-dialog" id="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title" hidden>
+    <div class="admin-dialog-panel">
+      <h3 id="confirm-dialog-title">Please confirm</h3>
+      <p id="confirm-dialog-message"></p>
+      <div class="admin-dialog-actions">
+        <button class="secondary-button" type="button" id="confirm-dialog-cancel">Cancel</button>
+        <button class="primary-button" type="button" id="confirm-dialog-ok">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-dialog" id="record-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="record-detail-title" hidden>
+    <div class="admin-dialog-panel">
+      <h3 id="record-detail-title">Record</h3>
+      <dl class="record-detail" id="record-detail-body"></dl>
+      <div class="admin-dialog-actions">
+        <button class="primary-button" type="button" id="record-detail-close">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script src="ui.js"></script>
   <script src="admin.js"></script>
 </body>

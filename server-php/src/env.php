@@ -8,10 +8,8 @@ function loadEnv(string $path): void
         return;
     }
 
-    $dotenv = Dotenv::createImmutable(dirname($path), basename($path));
-    $values = $dotenv->load();
-
-    foreach ($values as $key => $value) {
-        putenv("$key=$value");
-    }
+    // Unsafe = also populates getenv()/putenv() (all callers use getenv()).
+    // Immutable = never overwrites variables already set in the real environment.
+    $dotenv = Dotenv::createUnsafeImmutable(dirname($path), basename($path));
+    $dotenv->safeLoad();
 }

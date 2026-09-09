@@ -39,7 +39,7 @@ h5 { font-size: 1rem; }
 h6 { font-size: 0.9rem; }
 
 .splash-title,
-.login-brand h2,
+.login-brand .login-brand-name,
 .brand h1 {
   font-family: 'Alex Brush', cursive;
   font-weight: 400;
@@ -589,8 +589,10 @@ body.page-exit {
   border: 1px solid rgba(24, 132, 178, 0.12);
 }
 
+.section-header h2,
 .section-header h3,
 .section-dark h3,
+.contact-section h2,
 .contact-section h3 {
   margin: 0 0 0.8rem;
   font-size: 2rem;
@@ -2430,7 +2432,8 @@ body.page-exit {
   .admin-topbar,
   .admin-view:not(#view-payments),
   .payments-panel,
-  .report-actions {
+  .report-controls,
+  .admin-intro {
     display: none !important;
   }
 
@@ -3107,10 +3110,18 @@ header.home-header .home-hero-content {
   margin-bottom: 1.5rem;
 }
 
-.shop-page-heading h1 {
+.shop-page-heading h1,
+.shop-page-heading h2 {
   margin: 0 0 0.35rem;
   font-family: Inter, system-ui, sans-serif;
   font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+}
+
+.shop-collection-intro {
+  max-width: 760px;
+  margin: 0 0 1.75rem;
+  color: var(--muted);
+  line-height: 1.7;
 }
 
 .shop-page-heading p {
@@ -3227,6 +3238,7 @@ header.home-header .home-hero-content {
   color: rgba(255, 255, 255, 0.85);
 }
 
+.shop-hero-text h1,
 .shop-hero-text h2 {
   margin: 0 0 0.5rem;
   font-family: Inter, system-ui, sans-serif;
@@ -3637,7 +3649,8 @@ body.collection-page {
   font-weight: 600;
   letter-spacing: 0.08em;
 }
-.collection-page .shop-hero-text h2 {
+.collection-page .shop-hero-text h1,
+.shop-hero-text h2 {
   margin: 0 0 1rem;
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: clamp(2.85rem, 4vw, 4rem);
@@ -3645,7 +3658,7 @@ body.collection-page {
   line-height: 0.91;
   letter-spacing: -0.04em;
 }
-.collection-page .shop-hero-text h2 em { color: #9eae7b; font-weight: 500; }
+.collection-page .shop-hero-text h1 em, .collection-page .shop-hero-text h2 em { color: #9eae7b; font-weight: 500; }
 .collection-page .shop-hero-text p:not(.shop-hero-kicker) {
   max-width: 360px;
   color: rgba(255, 255, 255, 0.91);
@@ -3752,7 +3765,8 @@ body.collection-page {
   padding: 1.85rem 0 4.5rem;
 }
 .collection-page .shop-page-heading { margin-bottom: 0.6rem; }
-.collection-page .shop-page-heading h1 {
+.collection-page .shop-page-heading h1,
+.collection-page .shop-page-heading h2 {
   position: relative;
   margin: 0 0 1.2rem;
   padding-bottom: 0.6rem;
@@ -3762,7 +3776,8 @@ body.collection-page {
   line-height: 1;
   letter-spacing: -0.03em;
 }
-.collection-page .shop-page-heading h1::after {
+.collection-page .shop-page-heading h1::after,
+.collection-page .shop-page-heading h2::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -3970,7 +3985,8 @@ body.collection-page {
   .shop-brand-name { font-size: 1.32rem; }
   .collection-page .shop-hero-panel { height: 430px; }
   .collection-page .shop-hero-text { padding-inline: 2.4rem; }
-  .collection-page .shop-hero-text h2 { font-size: 2.55rem; }
+  .collection-page .shop-hero-text h1,
+.shop-hero-text h2 { font-size: 2.55rem; }
   .shop-hero-cta { margin-top: 1.15rem; }
   .collection-page .shop-page-section { margin-inline: 1rem; padding-top: 1.5rem; }
   .collection-page .shop-page-section .collection-card { grid-template-columns: 1fr; }
@@ -4305,6 +4321,7 @@ body.home-page {
   height: 1px;
   background: #cfb179;
 }
+.home-page #featured-collection .section-header h2,
 .home-page #featured-collection .section-header h3 {
   margin: 0 0 0.35rem;
   color: #0d3025;
@@ -5023,6 +5040,7 @@ select {
   box-shadow: none;
 }
 
+.contact-page .section-header h2,
 .contact-page .section-header h3 {
   margin: 0 0 .65rem;
 
@@ -5202,6 +5220,20 @@ select {
   z-index: 2;
 }
 
+.contact-intro {
+  max-width: 720px;
+  margin: 0 auto 2.5rem;
+  padding: 0 1.25rem;
+  text-align: center;
+  color: #4a5a52;
+  line-height: 1.7;
+}
+
+.contact-intro p {
+  margin: 0 0 1rem;
+}
+
+.contact-page .contact-section h2,
 .contact-page .contact-section h3 {
   margin: 0 0 .7rem;
 
@@ -6133,6 +6165,313 @@ select {
   .skeleton-container {
     transition: none;
   }
+}
+
+/* =========================================================
+   ADMIN — record tables, status badges, dialogs, report
+   ========================================================= */
+
+.panel-heading-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.archived-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  color: #4a5a52;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.record-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.record-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.record-table th {
+  text-align: left;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6a7a71;
+  padding: 0 0.85rem 0.6rem;
+  border-bottom: 2px solid rgba(22, 45, 43, 0.12);
+  white-space: nowrap;
+}
+
+.record-table td {
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid rgba(22, 45, 43, 0.08);
+  color: #2c3b34;
+  vertical-align: middle;
+}
+
+.record-table tbody tr:hover {
+  background: rgba(23, 59, 50, 0.04);
+}
+
+.record-table tr.is-archived td {
+  color: #97a49d;
+}
+
+.record-table tr.is-archived .record-product-cell strong {
+  text-decoration: line-through;
+}
+
+.record-table .col-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.record-table .col-actions {
+  text-align: right;
+  width: 1%;
+  white-space: nowrap;
+}
+
+.record-table select {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(22, 45, 43, 0.2);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.85rem;
+}
+
+.record-product-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 220px;
+}
+
+.record-product-cell img {
+  width: 46px;
+  height: 46px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.record-product-cell strong {
+  display: block;
+  color: #1d2925;
+}
+
+.record-product-cell small {
+  display: block;
+  color: #7a887f;
+}
+
+.record-row-actions {
+  display: inline-flex;
+  gap: 0.4rem;
+  justify-content: flex-end;
+}
+
+.record-table-empty {
+  padding: 1.5rem 0.5rem;
+  color: #7a887f;
+  text-align: center;
+}
+
+.record-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.1rem;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: #e7ebe8;
+  color: #47554d;
+}
+
+.status-badge.is-verified,
+.status-badge.is-completed,
+.status-badge.is-in_stock,
+.status-badge.is-paid { background: #dff1e6; color: #1c7a45; }
+
+.status-badge.is-pending,
+.status-badge.is-packed,
+.status-badge.is-shipped,
+.status-badge.is-low_stock { background: #fdf0d9; color: #9a6b12; }
+
+.status-badge.is-rejected,
+.status-badge.is-cancelled,
+.status-badge.is-out_of_stock { background: #fbe4de; color: #b0402c; }
+
+.status-badge.is-archived { background: #e6e6e6; color: #7a7a7a; }
+
+/* Responsive: stacked cards under ~760px */
+@media (max-width: 760px) {
+  .record-table thead { display: none; }
+  .record-table, .record-table tbody, .record-table tr, .record-table td { display: block; width: 100%; }
+  .record-table tr {
+    border: 1px solid rgba(22, 45, 43, 0.12);
+    border-radius: 10px;
+    margin-bottom: 0.85rem;
+    padding: 0.35rem 0.75rem;
+  }
+  .record-table td {
+    border-bottom: 1px solid rgba(22, 45, 43, 0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.55rem 0;
+  }
+  .record-table td:last-child { border-bottom: 0; }
+  .record-table td::before {
+    content: attr(data-label);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #8a978e;
+    flex-shrink: 0;
+  }
+  .record-table .col-num, .record-table .col-actions { text-align: right; }
+}
+
+/* --- Custom report controls --- */
+
+.report-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem 1.1rem;
+  align-items: flex-end;
+  margin: 1.1rem 0;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid rgba(22, 45, 43, 0.1);
+}
+
+.report-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #6a7a71;
+}
+
+.report-controls input,
+.report-controls select {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid rgba(22, 45, 43, 0.2);
+  border-radius: 7px;
+  background: #fff;
+  font-size: 0.9rem;
+  color: #2c3b34;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.report-controls-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.report-summary {
+  margin: 0 0 1rem;
+  font-weight: 600;
+  color: #1d2925;
+}
+
+/* --- Admin dialogs --- */
+
+.admin-dialog[hidden] {
+  display: none;
+}
+
+.admin-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(15, 28, 24, 0.55);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.admin-dialog.is-open {
+  opacity: 1;
+}
+
+.admin-dialog-panel {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.75rem;
+  width: min(460px, 100%);
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 30px 70px rgba(15, 28, 24, 0.35);
+  transform: translateY(8px);
+  transition: transform 0.2s ease;
+}
+
+.admin-dialog.is-open .admin-dialog-panel {
+  transform: translateY(0);
+}
+
+.admin-dialog-panel h3 {
+  margin: 0 0 0.75rem;
+  color: #1d2925;
+}
+
+.admin-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  margin-top: 1.5rem;
+}
+
+.record-detail {
+  display: grid;
+  grid-template-columns: minmax(120px, 38%) 1fr;
+  gap: 0.5rem 1rem;
+  margin: 0;
+}
+
+.record-detail dt {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a978e;
+  align-self: center;
+}
+
+.record-detail dd {
+  margin: 0;
+  color: #2c3b34;
+  word-break: break-word;
+}
+
+@media print {
+  .admin-dialog { display: none !important; }
+  .report-summary { display: block !important; }
 }
 
 

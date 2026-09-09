@@ -94,11 +94,13 @@ function ordersSummary(): void
 {
     requireAdmin();
     $db = getDb();
-    $totals = $db->query("SELECT COUNT(*) AS orders, COALESCE(SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END), 0) AS pending_orders FROM orders")->fetch();
-    $units = $db->query('SELECT COALESCE(SUM(quantity), 0) AS units FROM order_items')->fetch();
+    $totals = $db->query("SELECT COUNT(*) AS orders, COALESCE(SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END), 0) AS pending_orders FROM orders WHERE deleted_at IS NULL")->fetch();
+    $units = $db->query('SELECT COALESCE(SUM(oi.quantity), 0) AS units FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE o.deleted_at IS NULL')->fetch();
     $top = $db->query(
-        'SELECT item_name AS name, SUM(quantity) AS quantity
-         FROM order_items GROUP BY item_name ORDER BY quantity DESC, name ASC LIMIT 6'
+        'SELECT oi.item_name AS name, SUM(oi.quantity) AS quantity
+         FROM order_items oi JOIN orders o ON o.id = oi.order_id
+         WHERE o.deleted_at IS NULL
+         GROUP BY oi.item_name ORDER BY quantity DESC, name ASC LIMIT 6'
     )->fetchAll();
     jsonResponse([
         'orders' => (int) $totals['orders'],
@@ -118,9 +120,11 @@ function ordersList(): void
     $db = getDb();
     [$page, $perPage, $offset] = paginationParams(20);
 
-    $total = (int) $db->query('SELECT COUNT(*) FROM orders')->fetchColumn();
+    $where = isset($_GET['includeArchived']) ? '' : ' WHERE deleted_at IS NULL';
 
-    $stmt = $db->prepare('SELECT * FROM orders ORDER BY created_at DESC LIMIT :limit OFFSET :offset');
+    $total = (int) $db->query("SELECT COUNT(*) FROM orders$where")->fetchColumn();
+
+    $stmt = $db->prepare("SELECT * FROM orders$where ORDER BY created_at DESC LIMIT :limit OFFSET :offset");
     $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
@@ -139,12 +143,59 @@ function ordersUpdateStatus(string $id): void
     }
 
     $db = getDb();
-    $stmt = $db->prepare('UPDATE orders SET status = :status WHERE id = :id');
+    $stmt = $db->prepare('UPDATE orders SET status = :status WHERE id = :id AND deleted_at IS NULL');
     $stmt->execute(['status' => $status, 'id' => $id]);
 
     if ($stmt->rowCount() === 0) {
         jsonResponse(['error' => 'Order not found.'], 404);
     }
+
+    $updated = $db->prepare('SELECT * FROM orders WHERE id = :id');
+    $updated->execute(['id' => $id]);
+    jsonResponse($updated->fetch());
+}
+
+function ordersDelete(string $id): void
+{
+    requireAdmin();
+
+    // Archiving an order also archives its payment(s), so the sales figures
+    // and the payments ledger stay consistent with what the owner sees.
+    $db = getDb();
+    $db->beginTransaction();
+    $stmt = $db->prepare('UPDATE orders SET deleted_at = NOW() WHERE id = :id AND deleted_at IS NULL');
+    $stmt->execute(['id' => $id]);
+
+    if ($stmt->rowCount() === 0) {
+        $db->rollBack();
+        jsonResponse(['error' => 'Order not found.'], 404);
+    }
+
+    $db->prepare('UPDATE payments SET deleted_at = NOW() WHERE order_id = :id AND deleted_at IS NULL')
+        ->execute(['id' => $id]);
+    $db->commit();
+
+    http_response_code(204);
+    exit;
+}
+
+function ordersRestore(string $id): void
+{
+    requireAdmin();
+
+    $db = getDb();
+    $db->beginTransaction();
+    $stmt = $db->prepare('UPDATE orders SET deleted_at = NULL WHERE id = :id AND deleted_at IS NOT NULL');
+    $stmt->execute(['id' => $id]);
+
+    if ($stmt->rowCount() === 0) {
+        $db->rollBack();
+        jsonResponse(['error' => 'Archived order not found.'], 404);
+    }
+
+    $db->prepare('UPDATE payments SET deleted_at = NULL WHERE order_id = :id')
+        ->execute(['id' => $id]);
+    $db->commit();
 
     $updated = $db->prepare('SELECT * FROM orders WHERE id = :id');
     $updated->execute(['id' => $id]);

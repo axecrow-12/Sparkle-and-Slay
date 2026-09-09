@@ -138,36 +138,21 @@ window.SparkleUI = (() => {
     });
   }
   
-  return { announce, setBusy, clearFieldError, setFieldError, validateRequired, createDialog, setupMenu };
+  return { announce, setBusy, clearFieldError, setFieldError, validateRequired, createDialog, setupMenu, refreshReveals };
 })();
 
 /* =========================================================
-   SPARKLE & SLAY — SKELETON HELPERS
+   SPARKLE & SLAY — LOADING + REVEAL HELPERS
    ========================================================= */
 
 function showSkeleton(container, html) {
   if (!container) return;
-
   container.innerHTML = html;
-  container.classList.remove("is-hidden");
-}
-
-function hideSkeleton(container) {
-  if (!container) return;
-
-  container.classList.add("is-hidden");
-
-  setTimeout(() => {
-    if (container) {
-      container.innerHTML = "";
-      container.classList.remove("is-hidden");
-    }
-  }, 300);
 }
 
 function productSkeleton(count = 4) {
   return Array.from({ length: count }, () => `
-    <article class="product-skeleton">
+    <article class="product-skeleton" aria-hidden="true">
       <div class="skeleton product-skeleton-image"></div>
       <div class="skeleton product-skeleton-title"></div>
       <div class="skeleton product-skeleton-description"></div>
@@ -178,7 +163,7 @@ function productSkeleton(count = 4) {
 
 function collectionSkeleton(count = 4) {
   return Array.from({ length: count }, () => `
-    <article class="collection-skeleton">
+    <article class="collection-skeleton" aria-hidden="true">
       <div class="skeleton collection-skeleton-image"></div>
       <div class="skeleton collection-skeleton-title"></div>
       <div class="skeleton collection-skeleton-text"></div>
@@ -189,15 +174,37 @@ function collectionSkeleton(count = 4) {
 
 function adminProductSkeleton(count = 5) {
   return Array.from({ length: count }, () => `
-    <div class="admin-product-skeleton">
+    <div class="admin-product-skeleton" aria-hidden="true">
       <div class="skeleton admin-product-skeleton-image"></div>
-
       <div class="admin-product-skeleton-content">
         <div class="skeleton admin-product-skeleton-title"></div>
         <div class="skeleton admin-product-skeleton-text"></div>
       </div>
-
       <div class="skeleton admin-product-skeleton-action"></div>
     </div>
   `).join("");
 }
+
+const sparkleRevealObserver = typeof IntersectionObserver !== 'undefined'
+  ? new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        sparkleRevealObserver.unobserve(entry.target);
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' })
+  : null;
+
+function refreshReveals(root = document) {
+  if (!root) return;
+  const items = root.querySelectorAll('.reveal:not(.is-visible)');
+  if (!sparkleRevealObserver) {
+    items.forEach((item) => item.classList.add('is-visible'));
+    return;
+  }
+  items.forEach((item) => sparkleRevealObserver.observe(item));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  refreshReveals();
+});

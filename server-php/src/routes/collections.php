@@ -7,19 +7,26 @@ function collectionsList(): void
     }
     $db = getDb();
 
-    $search = trim((string) ($_GET['search'] ?? ''));
-    $where = '';
+    // Archived (soft-deleted) products are hidden unless ?includeArchived=1,
+    // which the admin panel uses to show and restore them.
+    $includeArchived = isset($_GET['includeArchived']);
+    $conditions = $includeArchived ? [] : ['deleted_at IS NULL'];
     $params = [];
+
+    $search = trim((string) ($_GET['search'] ?? ''));
     if ($search !== '') {
-        $where = ' WHERE name LIKE :search OR description LIKE :search';
+        $conditions[] = '(name LIKE :search OR description LIKE :search)';
         $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search);
         $params['search'] = '%' . $escaped . '%';
     }
+    $where = $conditions ? ' WHERE ' . implode(' AND ', $conditions) : '';
+
+    $columns = 'id, name, description, image, video, price, stock_status, colors, sizes, rating_average, rating_count'
+        . ($includeArchived ? ', deleted_at' : '');
 
     if (!isset($_GET['page'])) {
         $stmt = $db->prepare(
-            "SELECT id, name, description, image, video, price, stock_status, colors, sizes, rating_average, rating_count
-             FROM collections$where ORDER BY created_at DESC"
+            "SELECT $columns FROM collections$where ORDER BY created_at DESC"
         );
         $stmt->execute($params);
         jsonResponse($stmt->fetchAll());
@@ -32,8 +39,7 @@ function collectionsList(): void
     $total = (int) $totalStmt->fetchColumn();
 
     $stmt = $db->prepare(
-        "SELECT id, name, description, image, video, price, stock_status, colors, sizes, rating_average, rating_count
-         FROM collections$where ORDER BY created_at DESC LIMIT :limit OFFSET :offset"
+        "SELECT $columns FROM collections$where ORDER BY created_at DESC LIMIT :limit OFFSET :offset"
     );
     foreach ($params as $key => $value) {
         $stmt->bindValue($key, $value);
@@ -48,7 +54,7 @@ function collectionsList(): void
 function collectionsGetOne(string $id): void
 {
     $db = getDb();
-    $stmt = $db->prepare('SELECT * FROM collections WHERE id = :id');
+    $stmt = $db->prepare('SELECT * FROM collections WHERE id = :id AND deleted_at IS NULL');
     $stmt->execute(['id' => $id]);
     $row = $stmt->fetch();
 
@@ -107,7 +113,7 @@ function collectionsUpdate(string $id): void
     $body = getJsonBody();
 
     $db = getDb();
-    $existingStmt = $db->prepare('SELECT * FROM collections WHERE id = :id');
+    $existingStmt = $db->prepare('SELECT * FROM collections WHERE id = :id AND deleted_at IS NULL');
     $existingStmt->execute(['id' => $id]);
     $existing = $existingStmt->fetch();
 
@@ -158,8 +164,10 @@ function collectionsDelete(string $id): void
 {
     requireAdmin();
 
+    // Soft delete: the row stays in the database (so past orders keep their
+    // reference and it can be restored) but drops out of every read path.
     $db = getDb();
-    $stmt = $db->prepare('DELETE FROM collections WHERE id = :id');
+    $stmt = $db->prepare('UPDATE collections SET deleted_at = NOW() WHERE id = :id AND deleted_at IS NULL');
     $stmt->execute(['id' => $id]);
 
     if ($stmt->rowCount() === 0) {
@@ -168,4 +176,19 @@ function collectionsDelete(string $id): void
 
     http_response_code(204);
     exit;
+}
+
+function collectionsRestore(string $id): void
+{
+    requireAdmin();
+
+    $db = getDb();
+    $stmt = $db->prepare('UPDATE collections SET deleted_at = NULL WHERE id = :id AND deleted_at IS NOT NULL');
+    $stmt->execute(['id' => $id]);
+
+    if ($stmt->rowCount() === 0) {
+        jsonResponse(['error' => 'Archived collection not found.'], 404);
+    }
+
+    collectionsGetOne($id);
 }

@@ -37,6 +37,17 @@ if ($origin) {
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
+// Security headers. Also set in public/.htaccess for hosts with mod_headers;
+// duplicated here so they still apply under `php -S` and on hosts without it.
+// Set before the OPTIONS short-circuit so preflight responses carry them too.
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header("Content-Security-Policy: default-src 'none'; frame-ancestors 'none'");
+if (($_SERVER['HTTPS'] ?? '') === 'on') {
+    header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
@@ -105,6 +116,7 @@ $dispatcher = simpleDispatcher(function (RouteCollector $r) {
         $r->addRoute('GET', "$base/{id:\d+}", 'collectionsGetOne');
         $r->addRoute('PUT', "$base/{id:\d+}", 'collectionsUpdate');
         $r->addRoute('DELETE', "$base/{id:\d+}", 'collectionsDelete');
+        $r->addRoute('POST', "$base/{id:\d+}/restore", 'collectionsRestore');
     }
 
     $r->addRoute('POST', '/subscribe', 'subscribeCreate');
@@ -112,13 +124,18 @@ $dispatcher = simpleDispatcher(function (RouteCollector $r) {
 
     $r->addRoute('POST', '/orders', 'ordersCreate');
     $r->addRoute('GET', '/orders', 'ordersList');
+    $r->addRoute('DELETE', '/orders/{id:\d+}', 'ordersDelete');
+    $r->addRoute('POST', '/orders/{id:\d+}/restore', 'ordersRestore');
     $r->addRoute('POST', '/checkout', 'ecocashCheckout');
     $r->addRoute('POST', '/ecocash/notify', 'ecocashNotify');
     $r->addRoute('GET', '/checkout/{token:[a-f0-9]{64}}', 'ecocashCheckoutStatus');
     $r->addRoute('GET', '/orders/summary', 'ordersSummary');
     $r->addRoute('GET', '/payments', 'paymentsList');
     $r->addRoute('PUT', '/payments/{id:\d+}/status', 'paymentsUpdateStatus');
+    $r->addRoute('DELETE', '/payments/{id:\d+}', 'paymentsDelete');
+    $r->addRoute('POST', '/payments/{id:\d+}/restore', 'paymentsRestore');
     $r->addRoute('GET', '/payments/report', 'paymentsReport');
+    $r->addRoute('GET', '/reports/sales', 'salesReport');
 
     $r->addRoute('GET', '/settings', 'settingsGet');
     $r->addRoute('PUT', '/settings', 'settingsUpdate');

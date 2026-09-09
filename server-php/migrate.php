@@ -1,9 +1,7 @@
 <?php
 
-require __DIR__ . '/src/env.php';
+require __DIR__ . '/vendor/autoload.php';
 loadEnv(__DIR__ . '/.env');
-
-require __DIR__ . '/src/db.php';
 
 $db = getDb();
 $migrationsDir = __DIR__ . '/migrations';

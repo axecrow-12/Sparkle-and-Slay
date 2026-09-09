@@ -64,7 +64,10 @@ function showView(viewName) {
   title.textContent = viewName === 'shop' ? 'Shop management' : viewName[0].toUpperCase() + viewName.slice(1);
   if (viewName === 'payments') {
     loadPayments();
-    loadPaymentReport();
+    loadSalesReport();
+  }
+  if (viewName === 'orders') {
+    loadOrders();
   }
   closeSidebar();
 }
@@ -186,41 +189,229 @@ function resolveMediaUrl(value) {
   return value;
 }
 
-function renderAdminCollections() {
-  listEl.replaceChildren();
-  noCollections.hidden = collections.length > 0;
-  document.getElementById('product-count').textContent = `${collections.length} product${collections.length === 1 ? '' : 's'}`;
-  document.getElementById('metric-products').textContent = collections.length;
-  collections.forEach((item) => {
-    const row = document.createElement('div');
-    row.className = 'collection-row';
-    const info = document.createElement('div');
-    const name = document.createElement('strong');
-    name.textContent = item.name || 'Untitled product';
-    info.append(name, document.createElement('br'), makeSmall(item.price !== null && item.price !== undefined ? `$${Number(item.price).toFixed(2)}` : 'Price on request'), document.createElement('br'), makeSmall((item.description || 'No description').slice(0, 70)));
-    const media = document.createElement('div');
-    if (item.image) {
-      const thumbnail = document.createElement('img');
-      thumbnail.className = 'admin-product-thumbnail';
-      thumbnail.src = resolveMediaUrl(item.image);
-      thumbnail.alt = `${item.name || 'Product'} preview`;
-      thumbnail.addEventListener('error', () => { thumbnail.hidden = true; });
-      media.append(thumbnail);
-    }
-    media.append(makeSmall(item.image ? 'Image attached' : 'No image'), document.createElement('br'), makeSmall(item.stock_status === 'out_of_stock' ? 'Out of stock' : item.stock_status === 'low_stock' ? 'Low stock' : 'In stock'));
-    const actions = document.createElement('div');
-    actions.className = 'action-buttons';
-    const editBtn = document.createElement('button');
-    editBtn.className = 'edit-button'; editBtn.type = 'button'; editBtn.textContent = 'Edit'; editBtn.addEventListener('click', () => openProductForm(item));
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'delete-button'; deleteBtn.type = 'button'; deleteBtn.textContent = 'Delete'; deleteBtn.addEventListener('click', () => deleteCollection(item.id, item.name));
-    actions.append(editBtn, deleteBtn); row.append(info, media, actions); listEl.append(row);
+/* =========================================================
+   Shared record-view helpers (tables, badges, dialogs)
+   ========================================================= */
+
+function formatDate(value) {
+  if (!value) return '';
+  const date = new Date(String(value).replace(' ', 'T'));
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString(undefined, {
+    year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
   });
-  renderInventorySummary();
 }
 
-function renderInventorySummary() {
-  const counts = collections.reduce((summary, item) => { const status = item.stock_status || 'in_stock'; summary[status] = (summary[status] || 0) + 1; return summary; }, {});
+const STATUS_LABELS = {
+  in_stock: 'In stock', low_stock: 'Low stock', out_of_stock: 'Out of stock',
+};
+
+function statusBadge(status) {
+  const value = String(status || 'pending').toLowerCase();
+  const badge = document.createElement('span');
+  badge.className = `status-badge is-${value}`;
+  badge.textContent = STATUS_LABELS[value] || value[0].toUpperCase() + value.slice(1);
+  return badge;
+}
+
+// Builds a <table class="record-table"> from a column spec. Each column is
+// { label, key?, render?(row)->Node|string, className? }. Rows carrying a
+// truthy deleted_at get the .is-archived treatment.
+function recordTable({ columns, rows, emptyText = 'Nothing to show yet.' }) {
+  if (!rows.length) {
+    const empty = document.createElement('p');
+    empty.className = 'record-table-empty';
+    empty.textContent = emptyText;
+    return empty;
+  }
+  const table = document.createElement('table');
+  table.className = 'record-table';
+
+  const headRow = document.createElement('tr');
+  columns.forEach((col) => {
+    const th = document.createElement('th');
+    th.textContent = col.label;
+    if (col.className) th.className = col.className;
+    headRow.appendChild(th);
+  });
+  const thead = document.createElement('thead');
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  rows.forEach((row) => {
+    const tr = document.createElement('tr');
+    if (row.deleted_at) tr.className = 'is-archived';
+    columns.forEach((col) => {
+      const td = document.createElement('td');
+      if (col.className) td.className = col.className;
+      td.dataset.label = col.label;
+      const value = col.render ? col.render(row) : row[col.key];
+      if (value instanceof Node) td.appendChild(value);
+      else td.textContent = value === null || value === undefined || value === '' ? '—' : String(value);
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  return table;
+}
+
+function iconButton(label, className, onClick) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = className;
+  button.textContent = label;
+  button.addEventListener('click', onClick);
+  return button;
+}
+
+function rowActions(...buttons) {
+  const wrap = document.createElement('div');
+  wrap.className = 'record-row-actions';
+  buttons.filter(Boolean).forEach((button) => wrap.appendChild(button));
+  return wrap;
+}
+
+// --- Confirm dialog -------------------------------------------------------
+const confirmDialogEl = document.getElementById('confirm-dialog');
+let confirmResolver = null;
+const confirmDialog = SparkleUI.createDialog(confirmDialogEl, {
+  onClose() { if (confirmResolver) { confirmResolver(false); confirmResolver = null; } },
+});
+confirmDialogEl.addEventListener('click', (event) => {
+  if (event.target === confirmDialogEl) confirmDialog.close();
+});
+document.getElementById('confirm-dialog-cancel').addEventListener('click', () => confirmDialog.close());
+document.getElementById('confirm-dialog-ok').addEventListener('click', () => {
+  const resolve = confirmResolver;
+  confirmResolver = null;
+  confirmDialog.close();
+  resolve?.(true);
+});
+
+function confirmAction(message, { title = 'Please confirm', confirmLabel = 'Confirm' } = {}) {
+  document.getElementById('confirm-dialog-title').textContent = title;
+  document.getElementById('confirm-dialog-message').textContent = message;
+  document.getElementById('confirm-dialog-ok').textContent = confirmLabel;
+  confirmDialog.open();
+  return new Promise((resolve) => { confirmResolver = resolve; });
+}
+
+// --- Record detail dialog ----------------------------------------------------
+const recordDetailEl = document.getElementById('record-detail-dialog');
+const recordDetail = SparkleUI.createDialog(recordDetailEl);
+recordDetailEl.addEventListener('click', (event) => {
+  if (event.target === recordDetailEl) recordDetail.close();
+});
+document.getElementById('record-detail-close').addEventListener('click', () => recordDetail.close());
+
+function openRecordDetail(title, fields) {
+  document.getElementById('record-detail-title').textContent = title;
+  const body = document.getElementById('record-detail-body');
+  body.replaceChildren();
+  fields.forEach(([label, value]) => {
+    const dt = document.createElement('dt');
+    dt.textContent = label;
+    const dd = document.createElement('dd');
+    if (value instanceof Node) dd.appendChild(value);
+    else dd.textContent = value === null || value === undefined || value === '' ? '—' : String(value);
+    body.append(dt, dd);
+  });
+  recordDetail.open();
+}
+
+// --- Generic archive / restore --------------------------------------------
+async function archiveRecord(kind, id, label, reload) {
+  const confirmed = await confirmAction(
+    `Archive ${label}? It will be hidden from lists and reports, but you can restore it later.`,
+    { title: 'Archive record', confirmLabel: 'Archive' },
+  );
+  if (!confirmed) return;
+  const response = await fetch(`${API_BASE}/${kind}/${id}`, { method: 'DELETE', headers: authHeaders() });
+  if (handleAuthFailure(response)) return;
+  if (!response.ok && response.status !== 204) { showStatus('Could not archive that record.', 'error'); return; }
+  showStatus('Record archived.', 'success');
+  await reload();
+}
+
+async function restoreRecord(kind, id, reload) {
+  const response = await fetch(`${API_BASE}/${kind}/${id}/restore`, { method: 'POST', headers: authHeaders() });
+  if (handleAuthFailure(response)) return;
+  if (!response.ok) { showStatus('Could not restore that record.', 'error'); return; }
+  showStatus('Record restored.', 'success');
+  await reload();
+}
+
+function statusSelect(current, options, onChange, ariaLabel) {
+  const select = document.createElement('select');
+  select.setAttribute('aria-label', ariaLabel);
+  const values = options.includes(current) ? options : [current, ...options];
+  values.forEach((value) => {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = value[0].toUpperCase() + value.slice(1);
+    option.selected = value === current;
+    select.append(option);
+  });
+  select.addEventListener('change', () => onChange(select.value));
+  return select;
+}
+
+function productThumb(item) {
+  const cell = document.createElement('div');
+  cell.className = 'record-product-cell';
+  if (item.image) {
+    const thumbnail = document.createElement('img');
+    thumbnail.className = 'admin-product-thumbnail';
+    thumbnail.src = resolveMediaUrl(item.image);
+    thumbnail.alt = '';
+    thumbnail.width = 46;
+    thumbnail.height = 46;
+    thumbnail.loading = 'lazy';
+    thumbnail.decoding = 'async';
+    thumbnail.addEventListener('error', () => { thumbnail.hidden = true; });
+    cell.append(thumbnail);
+  }
+  const text = document.createElement('div');
+  const name = document.createElement('strong');
+  name.textContent = item.name || 'Untitled product';
+  text.append(name, makeSmall((item.description || 'No description').slice(0, 80)));
+  cell.append(text);
+  return cell;
+}
+
+function renderAdminCollections() {
+  const active = collections.filter((item) => !item.deleted_at);
+  noCollections.hidden = collections.length > 0;
+  document.getElementById('product-count').textContent = `${active.length} product${active.length === 1 ? '' : 's'}`;
+  document.getElementById('metric-products').textContent = active.length;
+
+  const table = recordTable({
+    emptyText: 'No products to show.',
+    rows: collections,
+    columns: [
+      { label: 'Product', render: productThumb },
+      { label: 'Price', className: 'col-num', render: (item) => (item.price !== null && item.price !== undefined ? `$${Number(item.price).toFixed(2)}` : 'On request') },
+      { label: 'Availability', render: (item) => statusBadge(item.deleted_at ? 'archived' : item.stock_status || 'in_stock') },
+      {
+        label: 'Actions',
+        className: 'col-actions',
+        render: (item) => (item.deleted_at
+          ? rowActions(iconButton('Restore', 'edit-button', () => restoreRecord('collections', item.id, loadCollections)))
+          : rowActions(
+            iconButton('Edit', 'edit-button', () => openProductForm(item)),
+            iconButton('Archive', 'delete-button', () => archiveRecord('collections', item.id, `"${item.name}"`, loadCollections)),
+          )),
+      },
+    ],
+  });
+  listEl.replaceChildren(table);
+  renderInventorySummary(active);
+}
+
+function renderInventorySummary(items = collections) {
+  const counts = items.reduce((summary, item) => { const status = item.stock_status || 'in_stock'; summary[status] = (summary[status] || 0) + 1; return summary; }, {});
   const summary = document.getElementById('inventory-summary');
   summary.replaceChildren();
   [['In stock', counts.in_stock || 0], ['Low stock', counts.low_stock || 0], ['Out of stock', counts.out_of_stock || 0]].forEach(([label, value]) => { const line = document.createElement('div'); line.className = 'inventory-line'; const name = document.createElement('span'); name.textContent = label; const count = document.createElement('strong'); count.textContent = value; line.append(name, count); summary.append(line); });
@@ -254,6 +445,11 @@ function renderTrendItems(items) {
 }
 
 async function loadDashboardSummary() {
+  showSkeleton(document.getElementById('trend-list'), `
+    <div class="trend-skeleton" aria-hidden="true"><div class="trend-skeleton-main"><span class="skeleton trend-skeleton-name"></span><span class="skeleton trend-skeleton-bar"></span></div><span class="skeleton" style="width:45px;height:14px;"></span></div>
+    <div class="trend-skeleton" aria-hidden="true"><div class="trend-skeleton-main"><span class="skeleton trend-skeleton-name"></span><span class="skeleton trend-skeleton-bar"></span></div><span class="skeleton" style="width:45px;height:14px;"></span></div>
+    <div class="trend-skeleton" aria-hidden="true"><div class="trend-skeleton-main"><span class="skeleton trend-skeleton-name"></span><span class="skeleton trend-skeleton-bar"></span></div><span class="skeleton" style="width:45px;height:14px;"></span></div>
+  `);
   try {
     const response = await fetch(`${API_BASE}/orders/summary`, { headers: authHeaders() });
     if (handleAuthFailure(response)) return;
@@ -273,48 +469,93 @@ function formatPaymentAmount(amount) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(amount) || 0);
 }
 
+/* ---------------- Payments ---------------- */
+
+// Archiving/restoring a payment or an order changes the sales figures, so the
+// report panel is re-fetched too once it has been loaded at least once.
+function refreshPaymentsView() {
+  loadPayments();
+  if (lastReport) loadSalesReport();
+  loadDashboardSummary();
+}
+
+function refreshOrdersView() {
+  loadOrders();
+  if (lastReport) loadSalesReport();
+  loadDashboardSummary();
+}
+
+function paymentDetailFields(payment) {
+  return [
+    ['Reference', payment.reference],
+    ['Customer', payment.customer_name],
+    ['Phone', payment.phone],
+    ['Item', payment.item_name],
+    ['Amount', formatPaymentAmount(payment.amount)],
+    ['Currency', payment.currency],
+    ['Method', payment.method],
+    ['Status', statusBadge(payment.status)],
+    ['Provider status', payment.provider_status],
+    ['Merchant number', payment.merchant_number],
+    ['Created', formatDate(payment.created_at)],
+    ['Verified', formatDate(payment.verified_at)],
+    ['Order ID', payment.order_id],
+    payment.deleted_at ? ['Archived', formatDate(payment.deleted_at)] : null,
+  ].filter(Boolean);
+}
+
 function renderPayments(payments) {
-    const list = document.getElementById('payment-list');
-    list.replaceChildren();
-    if (!payments.length) { list.textContent = 'No payment records yet.'; return; }
-  payments.forEach((payment) => {
-    const row = document.createElement('div'); row.className = 'payment-row';
-    const details = document.createElement('div');
-    const name = document.createElement('strong'); name.textContent = payment.customer_name || 'Customer';
-    const info = document.createElement('small'); info.textContent = `${payment.item_name} | Ref: ${payment.reference} | ${formatPaymentAmount(payment.amount)}`;
-    details.append(name, info);
-    const controls = document.createElement('div'); controls.className = 'payment-controls';
-    const select = document.createElement('select'); select.setAttribute('aria-label', `Payment status for ${payment.reference}`);
-    ['pending', 'verified', 'rejected'].forEach((status) => { const option = document.createElement('option'); option.value = status; option.textContent = status[0].toUpperCase() + status.slice(1); option.selected = status === payment.status; select.append(option); });
-    select.addEventListener('change', () => updatePaymentStatus(payment.id, select.value));
-    controls.append(select); row.append(details, controls); list.append(row);
+  const table = recordTable({
+    emptyText: 'No payment records yet.',
+    rows: payments,
+    columns: [
+      { label: 'Date', render: (p) => formatDate(p.created_at) },
+      { label: 'Customer', render: (p) => p.customer_name || 'Customer' },
+      { label: 'Phone', key: 'phone' },
+      { label: 'Item', key: 'item_name' },
+      { label: 'Reference', key: 'reference' },
+      { label: 'Amount', className: 'col-num', render: (p) => formatPaymentAmount(p.amount) },
+      {
+        label: 'Status',
+        render: (p) => (p.deleted_at
+          ? statusBadge('archived')
+          : statusSelect(p.status, ['pending', 'verified', 'rejected'], (value) => updatePaymentStatus(p.id, value), `Payment status for ${p.reference}`)),
+      },
+      {
+        label: 'Actions',
+        className: 'col-actions',
+        render: (p) => rowActions(
+          iconButton('View', 'edit-button', () => openRecordDetail(`Payment ${p.reference}`, paymentDetailFields(p))),
+          p.deleted_at
+            ? iconButton('Restore', 'edit-button', () => restoreRecord('payments', p.id, refreshPaymentsView))
+            : iconButton('Archive', 'delete-button', () => archiveRecord('payments', p.id, `payment ${p.reference}`, refreshPaymentsView)),
+        ),
+      },
+    ],
   });
+  document.getElementById('payment-list').replaceChildren(table);
 }
 
 let paymentsPage = 1;
 const paymentsPerPage = 20;
 
 async function loadPayments(page = paymentsPage) {
-    try {
-        const response = await fetch(`${API_BASE}/payments?page=${page}&perPage=${paymentsPerPage}`, { headers: authHeaders() });
-        if (handleAuthFailure(response) || !response.ok) throw new Error('Could not load payments.');
-        const result = await response.json();
-        paymentsPage = result.page;
-        renderPayments(result.data);
-
-        document.getElementById('payment-count').textContent = `${result.total} record${result.total === 1 ? '' : 's'}`;
-
-        const totalPages = Math.max(1, Math.ceil(result.total / result.perPage));
-        const pager = document.getElementById('payment-pager');
-        pager.hidden = totalPages <= 1;
-        document.getElementById('payment-page-label').textContent = `Page ${paymentsPage} of ${totalPages}`;
-        document.getElementById('payment-prev').disabled = paymentsPage <= 1;
-        document.getElementById('payment-next').disabled = paymentsPage >= totalPages;
-    } catch (error) { document.getElementById('payment-list').textContent = 'Payments are unavailable right now.'; }
+  const includeArchived = document.getElementById('payments-archived')?.checked;
+  showSkeleton(document.getElementById('payment-list'), `
+    <div class="payment-skeleton skeleton" aria-hidden="true"></div>
+    <div class="payment-skeleton skeleton" aria-hidden="true"></div>
+    <div class="payment-skeleton skeleton" aria-hidden="true"></div>
+  `);
+  try {
+    const response = await fetch(`${API_BASE}/payments?page=${page}&perPage=${paymentsPerPage}${includeArchived ? '&includeArchived=1' : ''}`, { headers: authHeaders() });
+    if (handleAuthFailure(response) || !response.ok) throw new Error('Could not load payments.');
+    const result = await response.json();
+    paymentsPage = result.page;
+    renderPayments(result.data);
+    document.getElementById('payment-count').textContent = `${result.total} record${result.total === 1 ? '' : 's'}`;
+    updatePager('payment', paymentsPage, Math.max(1, Math.ceil(result.total / result.perPage)));
+  } catch (error) { document.getElementById('payment-list').textContent = 'Payments are unavailable right now.'; }
 }
-
-document.getElementById('payment-prev').addEventListener('click', () => loadPayments(paymentsPage - 1));
-document.getElementById('payment-next').addEventListener('click', () => loadPayments(paymentsPage + 1));
 
 async function updatePaymentStatus(id, status) {
   const response = await fetch(`${API_BASE}/payments/${id}/status`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ status }) });
@@ -322,34 +563,181 @@ async function updatePaymentStatus(id, status) {
   showStatus('Payment status updated.', 'success');
 }
 
-async function loadPaymentReport() {
-  const period = document.getElementById('report-period').value;
-  const table = document.getElementById('report-table'); table.textContent = 'Loading report...';
+document.getElementById('payment-prev').addEventListener('click', () => loadPayments(paymentsPage - 1));
+document.getElementById('payment-next').addEventListener('click', () => loadPayments(paymentsPage + 1));
+document.getElementById('payments-archived').addEventListener('change', () => loadPayments(1));
+
+/* ---------------- Orders ---------------- */
+
+const ORDER_STATUSES = ['pending', 'paid', 'packed', 'shipped', 'completed', 'cancelled'];
+let ordersPage = 1;
+const ordersPerPage = 20;
+
+function orderDetailFields(order) {
+  return [
+    ['Order ID', order.id],
+    ['Customer', order.customer_name],
+    ['Phone', order.phone],
+    ['Item', order.item_name],
+    ['Amount', order.amount],
+    ['EcoCash reference', order.ecocash_reference],
+    ['Address', order.address],
+    ['Status', statusBadge(order.status)],
+    ['Created', formatDate(order.created_at)],
+    order.deleted_at ? ['Archived', formatDate(order.deleted_at)] : null,
+  ].filter(Boolean);
+}
+
+function renderOrders(orders) {
+  const table = recordTable({
+    emptyText: 'No orders yet.',
+    rows: orders,
+    columns: [
+      { label: 'Date', render: (o) => formatDate(o.created_at) },
+      { label: 'Customer', render: (o) => o.customer_name || 'Customer' },
+      { label: 'Phone', key: 'phone' },
+      { label: 'Item', key: 'item_name' },
+      { label: 'Amount', className: 'col-num', key: 'amount' },
+      {
+        label: 'Status',
+        render: (o) => (o.deleted_at
+          ? statusBadge('archived')
+          : statusSelect(o.status || 'pending', ORDER_STATUSES, (value) => updateOrderStatus(o.id, value), `Order status for order ${o.id}`)),
+      },
+      {
+        label: 'Actions',
+        className: 'col-actions',
+        render: (o) => rowActions(
+          iconButton('View', 'edit-button', () => openRecordDetail(`Order #${o.id}`, orderDetailFields(o))),
+          o.deleted_at
+            ? iconButton('Restore', 'edit-button', () => restoreRecord('orders', o.id, refreshOrdersView))
+            : iconButton('Archive', 'delete-button', () => archiveRecord('orders', o.id, `order #${o.id}`, refreshOrdersView)),
+        ),
+      },
+    ],
+  });
+  document.getElementById('orders-table').replaceChildren(table);
+}
+
+async function loadOrders(page = ordersPage) {
+  const includeArchived = document.getElementById('orders-archived')?.checked;
+  showSkeleton(document.getElementById('orders-table'), `
+    <div class="payment-skeleton skeleton" aria-hidden="true"></div>
+    <div class="payment-skeleton skeleton" aria-hidden="true"></div>
+    <div class="payment-skeleton skeleton" aria-hidden="true"></div>
+  `);
   try {
-    const response = await fetch(`${API_BASE}/payments/report?period=${period}`, { headers: authHeaders() });
+    const response = await fetch(`${API_BASE}/orders?page=${page}&perPage=${ordersPerPage}${includeArchived ? '&includeArchived=1' : ''}`, { headers: authHeaders() });
+    if (handleAuthFailure(response) || !response.ok) throw new Error('Could not load orders.');
+    const result = await response.json();
+    ordersPage = result.page;
+    renderOrders(result.data);
+    document.getElementById('orders-count').textContent = `${result.total} order${result.total === 1 ? '' : 's'}`;
+    updatePager('orders', ordersPage, Math.max(1, Math.ceil(result.total / result.perPage)));
+  } catch (error) { document.getElementById('orders-table').textContent = 'Orders are unavailable right now.'; }
+}
+
+async function updateOrderStatus(id, status) {
+  const response = await fetch(`${API_BASE}/orders/${id}/status`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ status }) });
+  if (handleAuthFailure(response) || !response.ok) { showStatus('Could not update order status.', 'error'); loadOrders(); return; }
+  showStatus('Order status updated.', 'success');
+}
+
+document.getElementById('orders-prev').addEventListener('click', () => loadOrders(ordersPage - 1));
+document.getElementById('orders-next').addEventListener('click', () => loadOrders(ordersPage + 1));
+document.getElementById('orders-archived').addEventListener('change', () => loadOrders(1));
+
+function updatePager(prefix, page, totalPages) {
+  const pager = document.getElementById(`${prefix}-pager`);
+  pager.hidden = totalPages <= 1;
+  document.getElementById(`${prefix}-page-label`).textContent = `Page ${page} of ${totalPages}`;
+  document.getElementById(`${prefix}-prev`).disabled = page <= 1;
+  document.getElementById(`${prefix}-next`).disabled = page >= totalPages;
+}
+
+/* ---------------- Custom sales report ---------------- */
+
+let lastReport = null;
+
+function reportQuery() {
+  const params = new URLSearchParams();
+  const from = document.getElementById('report-from').value;
+  const to = document.getElementById('report-to').value;
+  const group = document.getElementById('report-group').value;
+  if (from) params.set('from', from);
+  if (to) params.set('to', to);
+  params.set('groupBy', group);
+  if (group === 'period') params.set('interval', document.getElementById('report-interval').value);
+  params.set('status', document.getElementById('report-status').value);
+  params.set('method', document.getElementById('report-method').value);
+  return params.toString();
+}
+
+function syncReportControls() {
+  const isPeriod = document.getElementById('report-group').value === 'period';
+  document.getElementById('report-interval-wrap').hidden = !isPeriod;
+}
+
+async function loadSalesReport() {
+  syncReportControls();
+  const table = document.getElementById('report-table');
+  showSkeleton(table, `
+    <div class="payment-skeleton skeleton" aria-hidden="true"></div>
+    <div class="payment-skeleton skeleton" aria-hidden="true"></div>
+    <div class="payment-skeleton skeleton" aria-hidden="true"></div>
+  `);
+  try {
+    const response = await fetch(`${API_BASE}/reports/sales?${reportQuery()}`, { headers: authHeaders() });
     if (handleAuthFailure(response) || !response.ok) throw new Error('Could not load report.');
     const report = await response.json();
-    document.getElementById('report-title').textContent = `${period[0].toUpperCase() + period.slice(1)} payments`;
-    const total = report.rows.reduce((sum, row) => sum + row.verifiedAmount, 0);
-    document.getElementById('report-total').textContent = `${formatPaymentAmount(total)} verified`;
-    table.replaceChildren();
-    if (!report.rows.length) { table.textContent = 'No payments recorded for this period.'; return; }
-    const headings = ['Period', 'Records', 'Submitted', 'Verified'];
-    const header = document.createElement('div'); header.className = 'report-row report-header'; headings.forEach((heading) => { const cell = document.createElement('strong'); cell.textContent = heading; header.append(cell); }); table.append(header);
-    report.rows.forEach((row) => { const line = document.createElement('div'); line.className = 'report-row'; [row.period, row.payments, formatPaymentAmount(row.totalAmount), formatPaymentAmount(row.verifiedAmount)].forEach((value) => { const cell = document.createElement('span'); cell.textContent = value; line.append(cell); }); table.append(line); });
-  } catch (error) { table.textContent = 'Report is unavailable right now.'; }
+    lastReport = report;
+
+    const summary = report.summary;
+    const summaryEl = document.getElementById('report-summary');
+    summaryEl.hidden = false;
+    summaryEl.textContent = `${summary.records} record${summary.records === 1 ? '' : 's'} · `
+      + `${formatPaymentAmount(summary.totalAmount)} submitted · `
+      + `${formatPaymentAmount(summary.verifiedAmount)} verified · `
+      + `${summary.customers} customer${summary.customers === 1 ? '' : 's'}`;
+    document.getElementById('report-total').textContent = `${formatPaymentAmount(summary.verifiedAmount)} verified`;
+
+    table.replaceChildren(recordTable({
+      emptyText: 'No records match those filters.',
+      rows: report.rows,
+      columns: report.columns.map((col) => ({
+        label: col.label,
+        className: col.type === 'money' || col.type === 'number' ? 'col-num' : undefined,
+        render: (row) => (col.type === 'money' ? formatPaymentAmount(row[col.key]) : row[col.key]),
+      })),
+    }));
+  } catch (error) {
+    table.textContent = 'Report is unavailable right now.';
+  }
 }
 
-document.getElementById('load-report').addEventListener('click', loadPaymentReport);
+function exportReportCsv() {
+  if (!lastReport || !lastReport.rows.length) { showStatus('Load a report before exporting.', 'info'); return; }
+  const escape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+  const header = lastReport.columns.map((col) => escape(col.label)).join(',');
+  const lines = lastReport.rows.map((row) => lastReport.columns.map((col) => escape(row[col.key])).join(','));
+  const csv = [header, ...lines].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `sparkle-sales-${lastReport.groupBy}-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('report-controls').addEventListener('submit', (event) => { event.preventDefault(); loadSalesReport(); });
+document.getElementById('report-group').addEventListener('change', syncReportControls);
+document.getElementById('export-report').addEventListener('click', exportReportCsv);
 document.getElementById('print-report').addEventListener('click', () => window.print());
+syncReportControls();
 
-async function deleteCollection(id, name) {
-  if (!confirm(`Delete "${name}"?`)) return;
-  const response = await fetch(`${API_BASE}/collections/${id}`, { method: 'DELETE', headers: authHeaders() });
-  if (handleAuthFailure(response)) return;
-  if (!response.ok && response.status !== 204) { alert('Could not delete product.'); return; }
-  await loadCollections();
-}
 
 async function uploadSelectedFile(inputId) {
   const input = document.getElementById(inputId);
@@ -363,13 +751,19 @@ async function uploadSelectedFile(inputId) {
 }
 
 async function loadCollections() {
+  showSkeleton(listEl, adminProductSkeleton(5));
+  noCollections.hidden = true;
+  const includeArchived = document.getElementById('products-archived')?.checked;
   try {
-    const response = await fetch(`${API_BASE}/collections`);
+    const response = await fetch(`${API_BASE}/collections${includeArchived ? '?includeArchived=1' : ''}`, { headers: authHeaders() });
     if (!response.ok) throw new Error('Could not load products.');
     collections = await response.json();
     renderAdminCollections();
   } catch (error) {
     listEl.textContent = 'Could not load products. Is the backend running?';
+    document.getElementById('metric-products').textContent = '—';
+    document.getElementById('inventory-summary').textContent = 'Inventory is unavailable right now.';
+    noCollections.hidden = true;
   }
 }
 
@@ -414,6 +808,8 @@ form.addEventListener('submit', async (event) => {
     SparkleUI.setBusy(button, false);
   }
 });
+
+document.getElementById('products-archived').addEventListener('change', loadCollections);
 
 loadCollections();
 loadDashboardSummary();

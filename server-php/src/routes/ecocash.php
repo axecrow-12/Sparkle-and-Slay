@@ -38,7 +38,7 @@ function ecocashCart(array $items): array
     }
 
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
-    $stmt = getDb()->prepare("SELECT id, name, price, stock_status FROM collections WHERE id IN ($placeholders)");
+    $stmt = getDb()->prepare("SELECT id, name, price, stock_status FROM collections WHERE id IN ($placeholders) AND deleted_at IS NULL");
     $stmt->execute($ids);
     $collections = [];
     foreach ($stmt->fetchAll() as $row) $collections[(int) $row['id']] = $row;

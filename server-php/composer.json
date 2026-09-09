@@ -26,7 +26,8 @@
             "src/routes/payments.php",
             "src/routes/settings.php",
             "src/routes/subscribe.php",
-            "src/routes/ecocash.php"
+            "src/routes/ecocash.php",
+            "src/routes/reports.php"
         ]
     },
     "autoload-dev": {

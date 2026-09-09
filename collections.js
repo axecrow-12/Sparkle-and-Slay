@@ -195,6 +195,10 @@ function renderCart() {
       const image = document.createElement('img');
       image.src = item.image;
       image.alt = `${item.name} preview`;
+      image.width = 64;
+      image.height = 80;
+      image.loading = 'lazy';
+      image.decoding = 'async';
       row.appendChild(image);
     }
 
@@ -351,7 +355,7 @@ function renderCollections() {
   SparkleUI.announce(resultsMessage, `${filteredCollections.length} product${filteredCollections.length === 1 ? '' : 's'} shown${query ? ` for "${query}"` : ''}.`, 'info');
   filteredCollections.forEach((item) => {
     const card = document.createElement('article');
-    card.className = 'card reveal';
+    card.className = 'collection-card reveal';
     card.draggable = true;
     card.addEventListener('dragstart', (event) => {
       event.dataTransfer.effectAllowed = 'copy';
@@ -371,8 +375,14 @@ function renderCollections() {
 
     if (item.image) {
       const img = document.createElement('img');
+      img.className = 'lazy-image';
+      img.alt = item.name || 'Product photo';
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.width = 400;
+      img.height = 500;
+      img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
       img.src = resolveMediaUrl(item.image);
-      img.alt = item.name;
       img.onerror = () => img.style.display = 'none';
       mediaContainer.appendChild(img);
     }
@@ -442,6 +452,7 @@ function renderCollections() {
 
     listEl.appendChild(card);
   });
+  SparkleUI.refreshReveals(listEl);
 }
 
 
@@ -535,6 +546,9 @@ function openQuickview(item) {
     const img = document.createElement('img');
     img.src = resolveMediaUrl(item.image);
     img.alt = item.name || 'Product photo';
+    img.width = 600;
+    img.height = 750;
+    img.decoding = 'async';
     img.onerror = () => img.style.display = 'none';
     quickviewMedia.appendChild(img);
   }
@@ -753,7 +767,7 @@ if (sessionStorage.getItem('sparkleAdminToken')) {
   showAddBtn.style.display = 'none';
 }
 
-listEl.innerHTML = '<div class="loading-skeleton" aria-label="Loading collections"></div>';
+showSkeleton(listEl, collectionSkeleton(8));
 emptyMessage.style.display = 'none';
 
 const clearSearchBtn = document.getElementById('clear-search');
@@ -1036,6 +1050,8 @@ apiOrderModal.addEventListener('click', (event) => {
 });
 
 async function loadCollections() {
+  showSkeleton(listEl, collectionSkeleton(8));
+  emptyMessage.style.display = 'none';
   if (!USE_BACKEND) {
     try {
       const fallbackResponse = await fetch('collections.json');
