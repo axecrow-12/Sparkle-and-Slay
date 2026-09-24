@@ -9,6 +9,8 @@ const resultsMessage = document.getElementById('collection-results');
 const sortSelect = document.getElementById('collection-sort');
 const catalogViewButtons = document.querySelectorAll('[data-catalog-view]');
 const focusSearchBtn = document.getElementById('focus-search');
+const favoritesToggleBtn = document.getElementById('favorites-toggle');
+let showFavoritesOnly = false;
 
 SparkleUI.setupMenu(document.getElementById('shop-menu-toggle'), document.getElementById('shop-nav'));
 
@@ -256,9 +258,13 @@ function renderCart() {
 
 function getFilteredCollections() {
   const query = searchInput?.value.trim().toLowerCase() || '';
-  const matchingCollections = query
+  let matchingCollections = query
     ? collections.filter((item) => `${item.name || ''} ${item.description || ''}`.toLowerCase().includes(query))
     : [...collections];
+
+  if (showFavoritesOnly) {
+    matchingCollections = matchingCollections.filter((item) => favoriteProductIds.has(String(item.id)));
+  }
 
   switch (sortSelect?.value) {
     case 'price-low':
@@ -347,8 +353,10 @@ function renderCollections() {
 
   emptyMessage.style.display = 'none';
   if (!filteredCollections.length) {
-    listEl.innerHTML = '<div class="page-note"><p>No products match that search. Try a different name or description.</p></div>';
-    SparkleUI.announce(resultsMessage, `No products match "${query}".`, 'info');
+    listEl.innerHTML = showFavoritesOnly
+      ? '<div class="page-note"><p>You haven\'t saved any favorites yet. Tap the heart on a product to save it here.</p></div>'
+      : '<div class="page-note"><p>No products match that search. Try a different name or description.</p></div>';
+    SparkleUI.announce(resultsMessage, showFavoritesOnly ? 'No favorites saved yet.' : `No products match "${query}".`, 'info');
     return;
   }
 
@@ -741,6 +749,7 @@ async function watchApiCheckout(checkoutToken) {
         window.clearInterval(apiCheckoutTimer);
         showApiOrderStatus('Payment is still pending. Please keep your phone available and contact us if it does not complete.');
         apiOrderSubmit.disabled = false;
+        apiOrderSubmit.textContent = 'Try again';
       } else {
         showApiOrderStatus('Payment request sent. Approve it on your phone; waiting for confirmation...');
       }
@@ -772,17 +781,22 @@ emptyMessage.style.display = 'none';
 
 const clearSearchBtn = document.getElementById('clear-search');
 let searchDebounceTimer;
+let searchAbortController;
 const SEARCH_DEBOUNCE_MS = 300;
 
 async function performServerSearch(query) {
+    searchAbortController?.abort();
+    const controller = new AbortController();
+    searchAbortController = controller;
     try {
-        const response = await fetch(`${API_BASE}/collections?search=${encodeURIComponent(query)}`);
+        const response = await fetch(`${API_BASE}/collections?search=${encodeURIComponent(query)}`, { signal: controller.signal });
         if (!response.ok) throw new Error('Search failed.');
         collections = await response.json();
     } catch (error) {
-        // A hiccup mid-search just leaves the previously shown results in
-        // place rather than clearing the page, the next keystroke or the
-        // next successful search corrects it.
+        // A superseded request is expected and silently dropped; any other
+        // hiccup mid-search just leaves the previously shown results in
+        // place, the next keystroke or the next successful search corrects it.
+        if (error.name === 'AbortError') return;
     }
     renderCollections();
 }
@@ -820,6 +834,13 @@ focusSearchBtn?.addEventListener('click', () => {
 });
 
 sortSelect?.addEventListener('change', renderCollections);
+favoritesToggleBtn?.addEventListener('click', () => {
+  showFavoritesOnly = !showFavoritesOnly;
+  favoritesToggleBtn.classList.toggle('is-active', showFavoritesOnly);
+  favoritesToggleBtn.setAttribute('aria-pressed', String(showFavoritesOnly));
+  favoritesToggleBtn.querySelector('i').className = showFavoritesOnly ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+  renderCollections();
+});
 catalogViewButtons.forEach((button) => {
   button.addEventListener('click', () => {
     const view = button.dataset.catalogView;
@@ -926,6 +947,8 @@ orderForm.addEventListener('submit', async (e) => {
     return;
   }
 
+  const submitBtn = orderForm.querySelector('button[type="submit"]');
+  SparkleUI.setBusy(submitBtn, true, 'Submitting...');
   try {
     const response = await fetch(`${API_BASE}/orders`, {
       method: 'POST',
@@ -953,6 +976,8 @@ orderForm.addEventListener('submit', async (e) => {
     status.style.display = 'block';
     status.dataset.status = 'error';
     status.textContent = 'Could not reach the server. Please try again shortly.';
+  } finally {
+    SparkleUI.setBusy(submitBtn, false);
   }
 });
 
@@ -965,15 +990,18 @@ apiOrderForm.addEventListener('submit', async (e) => {
   apiOrderSubmit.disabled = true;
   apiOrderSubmit.textContent = 'Connecting to EcoCash...';
   showApiOrderStatus('Creating your secure payment request...');
-  const idempotencyKey = `${Date.now()}-${crypto.randomUUID()}`;
-  const payload = {
-    name: document.getElementById('api-order-name').value.trim(),
-    phone: document.getElementById('api-order-phone').value.trim(),
-    address: document.getElementById('api-order-address').value.trim(),
-    idempotencyKey,
-    items: currentOrderItems.map((item) => ({ collectionId: item.id, quantity: item.quantity })),
-  };
   try {
+    const randomId = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`;
+    const idempotencyKey = `${Date.now()}-${randomId}`;
+    const payload = {
+      name: document.getElementById('api-order-name').value.trim(),
+      phone: document.getElementById('api-order-phone').value.trim(),
+      address: document.getElementById('api-order-address').value.trim(),
+      idempotencyKey,
+      items: currentOrderItems.map((item) => ({ collectionId: item.id, quantity: item.quantity })),
+    };
     const response = await fetch(`${API_BASE}/checkout`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1078,6 +1106,7 @@ async function loadCollections() {
     });
     localStorage.setItem('sparkleCart', JSON.stringify(cart));
     renderCollections();
+    renderCart();
   } catch (err) {
     try {
       const fallbackResponse = await fetch('collections.json');
@@ -1091,6 +1120,7 @@ async function loadCollections() {
       });
       localStorage.setItem('sparkleCart', JSON.stringify(cart));
       renderCollections();
+      renderCart();
     } catch (fallbackError) {
       showError('Could not load collections. Please try again later.');
     }

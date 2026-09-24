@@ -189,6 +189,7 @@
   </style>
 </head>
 <body class="login-page">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <!-- Splash Screen -->
   <div class="splash-screen" id="splashScreen">
     <div class="splash-content">
@@ -218,7 +219,7 @@
     </nav>
   </header>
 
-  <main>
+  <main id="main-content" tabindex="-1">
     <div class="login-container">
       <div class="login-brand">
         <img src="photos/A5ecfa8534cd84b8c9e91661fcf73dfc0C-removebg-preview.png" alt="Sparkle &amp; Slay logo" width="500" height="500" decoding="async" onerror="this.onerror=null;this.src='photos/slay.jpeg'" />
@@ -283,6 +284,10 @@
             loginMode.style.display = 'none';
             setupMode.style.display = 'block';
           }
+        })
+        .catch(() => {
+          errorMessage.textContent = 'Could not reach the server to check login status. You can still try logging in below.';
+          errorMessage.style.display = 'block';
         });
     }
 

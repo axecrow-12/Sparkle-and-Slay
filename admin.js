@@ -87,6 +87,11 @@ document.getElementById('menu-toggle').addEventListener('click', () => {
   document.getElementById('menu-toggle').setAttribute('aria-expanded', String(open));
 });
 document.getElementById('sidebar-backdrop').addEventListener('click', closeSidebar);
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && document.getElementById('admin-sidebar').classList.contains('is-open')) {
+    closeSidebar();
+  }
+});
 
 logoutBtn.addEventListener('click', () => {
   sessionStorage.removeItem('sparkleAdminToken');

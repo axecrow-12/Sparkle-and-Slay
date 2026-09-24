@@ -70,7 +70,7 @@ The document root needs to be `public/`, not the `server-php` folder itself. If 
 
 Worth stating explicitly, so nothing gets "fixed" that was never broken:
 
-- The database connection uses `127.0.0.1`, not `localhost`, everywhere, including production. This isn't a local-only workaround, it avoids a real IPv6 resolution ambiguity that can occur on any host, not just the Windows development machine where it was first found.
+- The database connection defaults to `127.0.0.1`, not `localhost`, to avoid a real IPv6 resolution ambiguity that can occur on any host, not just the Windows development machine where it was first found. **Exception:** on cPanel and similar shared hosting, the MySQL user cPanel creates is often grant-restricted to `'user'@'localhost'` (the Unix socket) only — connecting via the TCP `127.0.0.1` path can then fail with "Access denied" even with correct credentials, because MySQL's privilege matching treats `localhost` and `127.0.0.1` as different hosts. If that happens, set `DB_HOST=localhost` in that environment's `.env`; see `.env.example`.
 - CORS never falls back to a wildcard `*` origin, in any environment. In `local` mode it defaults to a fixed convenience value, in every other mode, an unset `FRONTEND_ORIGIN` fails closed rather than falling open. There is no environment where this app allows requests from an unconfigured origin.
 - The fatal error shutdown handler and the exception handler are both always active, regardless of `APP_ENV`. Only `display_errors` (whether the *details* are shown) changes with the environment, the guarantee that a broken request still returns a clean JSON error rather than a blank response does not.
 
@@ -87,10 +87,12 @@ The storefront pages (`index.html`, `collection.html`, `contact.html`,
 `login.html`, `admin.html`, `404.html` + `styles.css`, `*.js`, `photos/`,
 `videos/`) are served separately from the API. Before/at deploy:
 
-1. **`config.js`** — set `API_BASE` to the deployed backend's **HTTPS** origin
-   (e.g. `https://sparkleandslay.com/api`). While it points at
-   `http://localhost:4001` a crawler/browser reports "HTTP URLs", "Outlinks to
-   localhost", and mixed-content warnings — those clear once it's an HTTPS URL.
+1. **`config.js`** — `API_BASE` now derives itself: `http://localhost:4001/api`
+   only when the page is served from `localhost`/`127.0.0.1`, otherwise
+   `${window.location.origin}/api`. Nothing to edit as long as the API lives at
+   `/api` on the same domain as the frontend (the cPanel layout below). If the
+   API instead lives on a separate domain or subdomain, replace the else-branch
+   in `config.js` with that fixed HTTPS origin.
 2. **Canonical URLs** — every page has
    `<link rel="canonical" href="https://sparkleandslay.com/...">`. If the real
    domain differs, find/replace `https://sparkleandslay.com` across the `.html`
@@ -116,7 +118,96 @@ The storefront pages (`index.html`, `collection.html`, `contact.html`,
 7. **Re-crawl** the live HTTPS site to confirm the localhost/HTTP findings are
    gone.
 
-## Post-deployment smoke test
+## cPanel walkthrough (same domain, `/api` path, SSH available)
+
+This project's chosen layout: frontend and API on the same domain
+(`sparkleandslay.com` and `sparkleandslay.com/api`), deploying with SSH access
+to cPanel (cPanel's **Terminal** app, or a real SSH client). Run everything
+below from the account's home directory unless noted.
+
+### 1. Keep the PHP app out of the web root
+
+`public_html` is the only web-accessible folder. `server-php/`'s `.env`,
+`src/`, `vendor/`, and `migrations/` must **never** live inside it — otherwise
+`https://sparkleandslay.com/.env` is a real, fetchable URL. Upload (via Git,
+SFTP, or cPanel's File Manager) the whole `server-php` folder into the home
+directory, as a sibling of `public_html`:
+
+    ~/server-php/            <- NOT web-accessible
+      public/
+      src/
+      vendor/                <- created by composer install, step 2
+      migrations/
+      .env                   <- created in step 4, never committed
+      composer.json
+    ~/public_html/           <- web-accessible (the frontend + everything below repo root)
+      index.html
+      collection.html
+      ...
+
+### 2. Install dependencies on the server
+
+    cd ~/server-php
+    composer install --no-dev --optimize-autoloader
+
+If cPanel's Terminal doesn't have `composer`, check **Setup PHP App** /
+**Software** in cPanel first — most modern cPanel builds bundle it. As a
+fallback, run `composer install --no-dev --optimize-autoloader` locally and
+upload the resulting `vendor/` folder via SFTP (it's large; a zip upload
+extracted through File Manager is much faster than per-file SFTP).
+
+### 3. Expose `public/` at `/api` without moving it into the web root
+
+    cd ~/public_html
+    ln -s ~/server-php/public api
+
+This makes `https://sparkleandslay.com/api/...` serve
+`~/server-php/public/index.php`, whose own `__DIR__ . '/../...'` paths
+(`vendor/autoload.php`, `.env`) still resolve to the real `~/server-php/`
+directory — so nothing sensitive ever sits inside `public_html`. The
+`public/.htaccess` routing file and `public/uploads/.htaccess` travel with the
+symlink automatically; nothing to duplicate.
+
+(If cPanel's file structure uses `~/public_html` under a different path, e.g.
+an addon domain's own `public_html`, point the symlink there instead — the
+principle is the same: `api` inside the site's web root, pointing at
+`server-php/public` outside it.)
+
+### 4. Create the database and the `.env` file
+
+In cPanel: **MySQL Databases** → create a database and a user, add the user to
+the database with **All Privileges**. cPanel usually prefixes both with your
+account username (e.g. `cpaneluser_sparkle_slay`) — use the prefixed names.
+
+    cd ~/server-php
+    cp .env.example .env
+
+Edit `.env` (cPanel File Manager's code editor, or `nano .env` over SSH):
+
+| Variable | Set to |
+|---|---|
+| `DB_HOST` | try `127.0.0.1` first; switch to `localhost` if you get "Access denied" (see the note above) |
+| `DB_NAME` / `DB_USER` / `DB_PASSWORD` | the prefixed values from the MySQL Databases page |
+| `JWT_SECRET` | fresh output of `php -r "echo bin2hex(random_bytes(32));"` — never the `.env.example` placeholder |
+| `APP_ENV` | unset, or anything other than `local` |
+| `FRONTEND_ORIGIN` | `https://sparkleandslay.com` exactly |
+| `ECOCASH_NOTIFY_URL` | `https://sparkleandslay.com/api/ecocash/notify` |
+| `ECOCASH_API_URL` / `ECOCASH_QUERY_BASE_URL` | keep the `-preprod` values until a successful preprod transaction (see step 6) |
+
+### 5. Migrate and set permissions
+
+    cd ~/server-php
+    php migrate.php
+    chmod 755 public/uploads
+
+### 6. SSL, then verify
+
+cPanel's **SSL/TLS Status** → **AutoSSL** (or Let's Encrypt, depending on the
+host) needs to be issued and active for the domain before EcoCash's notify
+callback or the admin login are usable. Then work through the smoke test
+below against `https://sparkleandslay.com`.
+
+
 
 In order, after the site is live:
 

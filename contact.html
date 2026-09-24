@@ -148,12 +148,13 @@
     newsletterForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('newsletter-email').value.trim();
+      const button = newsletterForm.querySelector('button[type="submit"]');
 
       newsletterStatus.hidden = true;
+      SparkleUI.setBusy(button, true, 'Joining...');
 
       try {
         if (!USE_BACKEND) {
-          newsletterStatus.textContent = 'Newsletter signup will be available soon.';
           SparkleUI.announce(newsletterStatus, 'Newsletter signup will be available soon.', 'warning');
           return;
         }
@@ -173,6 +174,8 @@
         }
       } catch (err) {
         SparkleUI.announce(newsletterStatus, 'Could not reach the server. Please try again shortly.', 'error');
+      } finally {
+        SparkleUI.setBusy(button, false);
       }
     });
   </script>
