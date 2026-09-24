@@ -2464,11 +2464,25 @@ body.page-exit {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  border: none;
-  background: transparent;
-  font-size: 1.8rem;
+  z-index: 1;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid rgba(22, 45, 43, 0.14);
+  border-radius: 50%;
+  background: #fff;
+  font-size: 1.35rem;
+  line-height: 1;
   cursor: pointer;
-  color: #333;
+  color: var(--dark);
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.modal-close:hover {
+  background: #eef1e8;
+  border-color: var(--accent);
+  transform: rotate(90deg);
 }
 
 .modal form {
@@ -3263,36 +3277,77 @@ header.home-header .home-hero-content {
   gap: 1.75rem;
 }
 
+.quickview-media {
+  display: flex;
+  max-height: min(70vh, 560px);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #f4f2ec;
+}
+
 .quickview-media img,
 .quickview-media video {
   width: 100%;
-  border-radius: 10px;
+  max-height: min(70vh, 560px);
   object-fit: cover;
 }
 
 .quickview-info h4 {
   margin: 0 0 0.4rem;
-  font-size: 1.4rem;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.7rem;
+  color: var(--dark);
 }
 
 .quickview-info .product-price {
-  margin: 0 0 0.75rem;
-  font-size: 1.15rem;
+  margin: 0 0 0.9rem;
+  color: var(--accent);
+  font-size: 1.3rem;
+  font-weight: 800;
 }
 
 .quickview-info p:not(.product-price):not(.stock-badge) {
   margin: 0 0 1.1rem;
   color: var(--muted);
+  line-height: 1.55;
 }
 
 .quickview-quantity {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
-  margin: 0 0 1.1rem;
+  margin: 0 0 1.25rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(22, 45, 43, 0.1);
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--dark);
+}
+
+.quickview-info .buy-button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  border: 1px solid #0b392b;
+  border-radius: 999px;
+  background: #0b392b;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(11, 57, 43, 0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.quickview-info .buy-button:hover {
+  background: #1b5845;
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(11, 57, 43, 0.18);
 }
 
 @media (max-width: 640px) {
@@ -3395,31 +3450,37 @@ header.home-header .home-hero-content {
 }
 
 .color-swatch {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  border: 2px solid rgba(22, 45, 43, 0.14);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1.5px rgba(22, 45, 43, 0.18);
   cursor: pointer;
   padding: 0;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
 
+.color-swatch:hover { transform: translateY(-1px); }
+
 .color-swatch.is-selected {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(35, 107, 66, 0.18);
+  box-shadow: 0 0 0 2px var(--accent);
 }
 
 .size-option {
-  min-width: 42px;
-  min-height: 36px;
-  padding: 0 0.6rem;
+  min-width: 44px;
+  min-height: 40px;
+  padding: 0 0.7rem;
   border: 1px solid rgba(22, 45, 43, 0.18);
-  border-radius: 6px;
+  border-radius: 999px;
   background: #fff;
   color: var(--dark);
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
+
+.size-option:hover { border-color: var(--accent); }
 
 .size-option.is-selected {
   border-color: var(--accent);
