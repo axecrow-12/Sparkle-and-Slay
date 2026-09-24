@@ -14,12 +14,26 @@ let showFavoritesOnly = false;
 
 SparkleUI.setupMenu(document.getElementById('shop-menu-toggle'), document.getElementById('shop-nav'));
 
+// Arriving from a header link (?favorites=1 and/or #shop-collection): land the
+// shopper directly on their saved favorites and/or a focused search field.
+const initialParams = new URLSearchParams(window.location.search);
+if (initialParams.get('favorites') === '1' && favoritesToggleBtn) {
+  showFavoritesOnly = true;
+  favoritesToggleBtn.classList.add('is-active');
+  favoritesToggleBtn.setAttribute('aria-pressed', 'true');
+  const icon = favoritesToggleBtn.querySelector('i');
+  if (icon) icon.className = 'fa-solid fa-heart';
+}
+if (window.location.hash === '#shop-collection') {
+  window.setTimeout(() => searchInput?.focus(), 400);
+}
+
 const heroPanel = document.getElementById('shop-hero-panel');
 const heroDots = document.querySelectorAll('.hero-pagination button');
 const heroImages = [
-  'photos/SandSlay Backdrop 2.jpg',
-  'photos/SandSlay Backdrop.jpg',
-  'photos/SandSlay Clothes Line.jpg',
+  'photos/hero-boutique-1.jpg',
+  'photos/hero-boutique-2.jpg',
+  'photos/hero-boutique-3.jpg',
 ];
 let heroIndex = 0;
 let heroTimer;

@@ -27,7 +27,10 @@
     </div>
   </div>
 
-  <div class="home-topbar"><i class="fa-solid fa-truck" aria-hidden="true"></i><span>Free delivery on EcoCash orders over $50 in Harare</span></div>
+  <div class="home-topbar">
+    <span class="home-topbar-item"><i class="fa-solid fa-truck" aria-hidden="true"></i><span>Free delivery on EcoCash orders over $50 in Harare</span></span>
+    <span class="home-topbar-tagline">Premium quality &bull; Authentic styles &bull; Fashion for every you</span>
+  </div>
 
   <header class="home-header">
     <div class="home-header-inner">
@@ -42,35 +45,30 @@
         <a href="contact.html">Contact Us</a>
         <a href="login.html">Admin</a>
       </nav>
-      <a class="home-contact-link" href="tel:+263776593476"><i class="fa-solid fa-phone" aria-hidden="true"></i><span>+263 77 659 3476</span></a>
-      <div class="home-social-links" aria-label="Social media">
-        <a href="https://facebook.com/sparkleandslay" target="_blank" rel="noopener" aria-label="Sparkle and Slay on Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i></a>
-        <a href="https://tiktok.com/@sparkleandslay" target="_blank" rel="noopener" aria-label="Sparkle and Slay on TikTok"><i class="fab fa-tiktok" aria-hidden="true"></i></a>
-        <a href="https://instagram.com/sparkleandslay" target="_blank" rel="noopener" aria-label="Sparkle and Slay on Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>
-        <a href="https://wa.me/263776593476" target="_blank" rel="noopener" aria-label="Chat with Sparkle and Slay on WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
+      <div class="home-header-actions" aria-label="Account and shopping">
+        <a class="home-icon-link" href="collection.html#shop-collection" aria-label="Search products"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></a>
+        <a class="home-icon-link" href="login.html" aria-label="Admin account"><i class="fa-regular fa-user" aria-hidden="true"></i></a>
+        <a class="home-icon-link" href="collection.html?favorites=1#shop-collection" aria-label="View my favorites"><i class="fa-regular fa-heart" aria-hidden="true"></i></a>
+        <a class="home-icon-link home-cart-link" href="collection.html" aria-label="Open shopping cart"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span class="home-cart-badge">1</span></a>
+        <a class="home-contact-link" href="tel:+263776593476"><i class="fa-solid fa-phone" aria-hidden="true"></i><span>+263 77 659 3476</span></a>
       </div>
-      <a class="home-cart-link" href="collection.html" aria-label="Open shopping cart"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span class="home-cart-badge">1</span></a>
     </div>
   </header>
 
-  <section class="home-editorial-hero" aria-labelledby="home-hero-title">
+  <section class="home-editorial-hero" id="home-hero-panel" aria-labelledby="home-hero-title">
     <div class="home-hero-content">
       <p class="home-hero-kicker">Sparkle &amp; Slay</p>
       <h1 id="home-hero-title">Style made to<br><em>stand out.</em></h1>
       <p>Fresh pieces for everyday confidence and unforgettable moments.</p>
       <a class="home-hero-cta" href="collection.html">Shop the Collection <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
     </div>
-    <video
-        autoplay
-        muted
-        loop
-        playsinline
-        preload="auto"
-        class="header-video"
-        id="headerVideo"
-    >
-        <source src="videos/SandSlay.mp4" type="video/mp4">
-    </video>
+    <p class="home-hero-caption">Confidence looks<br>good on you.</p>
+    <button id="home-hero-previous" class="hero-navigation hero-navigation-previous" type="button" aria-label="Show previous featured image"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></button>
+    <button id="home-hero-next" class="hero-navigation hero-navigation-next" type="button" aria-label="Show next featured image"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+    <div class="hero-pagination" id="home-hero-pagination" aria-label="Featured image selection">
+      <button class="is-active" type="button" aria-label="Show featured image 1" aria-current="true"></button>
+      <button type="button" aria-label="Show featured image 2"></button>
+    </div>
   </section>
 
   <section class="home-benefits" aria-label="Shopping benefits">
@@ -93,7 +91,7 @@
 
       <div id="featured-cards" class="cards">
         <article class="card">
-          <img src="photos/jean1.png" alt="Urban Essentials collection" width="280" height="279" loading="lazy" decoding="async" />
+          <img src="photos/featured-urban.jpg" alt="Woman in a white shirt and denim jeans against a city backdrop" width="1000" height="1500" loading="lazy" decoding="async" />
           <h4>Urban Essentials</h4>
           <p>
             Modern staples designed in sleek and crisp tones.
@@ -101,7 +99,7 @@
         </article>
 
         <article class="card">
-          <img src="photos/dress1.png" alt="Statement Looks collection" width="237" height="312" loading="lazy" decoding="async" />
+          <img src="photos/featured-statement.jpg" alt="Woman smiling in a teal satin dress" width="1000" height="1500" loading="lazy" decoding="async" />
           <h4>Statement Looks</h4>
           <p>
             Head-turning styles for when you want to make a lasting impression.
@@ -109,7 +107,7 @@
         </article>
 
         <article class="card">
-          <img src="photos/jean2.png" alt="Everyday Essentials collection" width="345" height="347" loading="lazy" decoding="async" />
+          <img src="photos/featured-everyday.jpg" alt="Close-up of a mustard knit sweater and denim jeans" width="1000" height="667" loading="lazy" decoding="async" />
           <h4>Everyday Essentials</h4>
           <p>
             Easy everyday pieces with a polished, versatile finish.
@@ -117,7 +115,7 @@
         </article>
 
         <article class="card">
-          <img src="photos/dress2.png" alt="Second Look collection" width="227" height="273" loading="lazy" decoding="async" />
+          <img src="photos/featured-secondlook.jpg" alt="Woman in a beige midi dress and blazer with a headscarf" width="1000" height="1500" loading="lazy" decoding="async" />
           <h4>Second Look</h4>
           <p>
             A statement dress designed for memorable occasions.
@@ -137,29 +135,20 @@
           <p>Discover our latest pieces fresh off the rack</p>
         </div>
         <div id="arrivals-grid" class="arrivals-grid">
-          <div class="arrival-card">
+          <div class="arrival-card is-hero">
             <div class="arrival-image">
-              <img src="photos/WhatsApp%20Image%202026-07-07%20at%2009.34.50.jpeg" alt="Model wearing a Sparkle &amp; Slay outfit" width="370" height="439" loading="lazy" decoding="async" />
+              <img src="photos/arrival-hero.jpg" alt="Woman wearing a black ribbed-knit midi dress" width="1200" height="900" loading="lazy" decoding="async" />
             </div>
-            <div class="arrival-card-content"><span class="arrival-icon"><i class="fa-solid fa-hanger" aria-hidden="true"></i></span><div><h4>Coming Soon</h4><p>New items added weekly</p><a href="#contact">Notify Me <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div></div>
           </div>
-          <div class="arrival-card">
+          <div class="arrival-card is-secondary">
             <div class="arrival-image">
-              <img src="photos/girl.jpeg" alt="Sparkle &amp; Slay new-season look" width="843" height="1264" loading="lazy" decoding="async" />
+              <img src="photos/arrival-secondary-1.jpg" alt="Woman in a cream tailored blazer and trouser set" width="1200" height="1799" loading="lazy" decoding="async" />
             </div>
-            <div class="arrival-card-content"><span class="arrival-icon"><i class="fa-solid fa-hanger" aria-hidden="true"></i></span><div><h4>Coming Soon</h4><p>New items added weekly</p><a href="#contact">Notify Me <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div></div>
           </div>
-          <div class="arrival-card">
+          <div class="arrival-card is-secondary">
             <div class="arrival-image">
-              <img src="photos/Gemini_Generated_Image_h5eczkh5eczkh5ec.png" alt="Sparkle &amp; Slay statement dress" width="896" height="1195" loading="lazy" decoding="async" />
+              <img src="photos/arrival-secondary-2.jpg" alt="Black velvet jacket and trousers styled on a chair with dried florals" width="1200" height="1500" loading="lazy" decoding="async" />
             </div>
-            <div class="arrival-card-content"><span class="arrival-icon"><i class="fa-solid fa-hanger" aria-hidden="true"></i></span><div><h4>Coming Soon</h4><p>New items added weekly</p><a href="#contact">Notify Me <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div></div>
-          </div>
-          <div class="arrival-card">
-            <div class="arrival-image">
-              <img src="photos/Gemini_Generated_Image_do7lycdo7lycdo7l.png" alt="Sparkle &amp; Slay evening look" width="896" height="1195" loading="lazy" decoding="async" />
-            </div>
-            <div class="arrival-card-content"><span class="arrival-icon"><i class="fa-solid fa-hanger" aria-hidden="true"></i></span><div><h4>Coming Soon</h4><p>New items added weekly</p><a href="#contact">Notify Me <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div></div>
           </div>
         </div>
         <a class="arrivals-all-cta" href="collection.html">View All New Arrivals <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
@@ -190,19 +179,6 @@
           <p class="owner">Angella<br>Business Owner</p>
         </div>
       </div>
-    </section>
-
-    <section id="contact" class="section-light contact-section fade-up">
-      <div>
-        <h3>Stay in Touch</h3>
-        <p>Get new arrivals, style updates, and exclusive offers delivered to your inbox.</p>
-      </div>
-      <form class="contact-form" id="newsletter-form">
-        <label class="sr-only" for="newsletter-email">Email address</label>
-        <input type="email" id="newsletter-email" placeholder="Your email address" autocomplete="email" required />
-        <button type="submit">Join the List</button>
-      </form>
-      <p id="newsletter-status" class="status-message" role="status" aria-live="polite" hidden></p>
     </section>
   </main>
 
@@ -245,6 +221,8 @@
   <script>
     // Splash screen: shown in full only on the first page of the session, see splash.js
 
+    const featuredCards = document.getElementById('featured-cards');
+
     document.body.classList.add('page-enter');
     requestAnimationFrame(() => document.body.classList.remove('page-enter'));
 
@@ -258,6 +236,53 @@
       } catch (err) {
         homeCartBadge.hidden = true;
       }
+    }
+
+    const homeHeroPanel = document.getElementById('home-hero-panel');
+    if (homeHeroPanel) {
+      const homeHeroImages = [
+        'photos/home-hero-1.jpg',
+        'photos/home-hero-2.jpg',
+      ];
+      const homeHeroDots = document.querySelectorAll('#home-hero-pagination button');
+      let homeHeroIndex = 0;
+      let homeHeroTimer;
+
+      const setHomeHeroSlide = (nextIndex) => {
+        homeHeroIndex = (nextIndex + homeHeroImages.length) % homeHeroImages.length;
+        homeHeroPanel.style.backgroundImage =
+          `linear-gradient(90deg, rgba(5, 38, 28, 0.96) 0%, rgba(7, 43, 30, 0.77) 31%, rgba(7, 43, 30, 0.29) 60%, rgba(7, 43, 30, 0.1) 100%), url('${homeHeroImages[homeHeroIndex]}')`;
+        homeHeroPanel.style.backgroundSize = 'cover';
+        homeHeroPanel.style.backgroundPosition = 'center 30%';
+        homeHeroDots.forEach((dot, index) => {
+          const isActive = index === homeHeroIndex;
+          dot.classList.toggle('is-active', isActive);
+          dot.setAttribute('aria-current', String(isActive));
+        });
+      };
+
+      const restartHomeHeroRotation = () => {
+        window.clearInterval(homeHeroTimer);
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          homeHeroTimer = window.setInterval(() => setHomeHeroSlide(homeHeroIndex + 1), 6500);
+        }
+      };
+
+      document.getElementById('home-hero-previous')?.addEventListener('click', () => {
+        setHomeHeroSlide(homeHeroIndex - 1);
+        restartHomeHeroRotation();
+      });
+      document.getElementById('home-hero-next')?.addEventListener('click', () => {
+        setHomeHeroSlide(homeHeroIndex + 1);
+        restartHomeHeroRotation();
+      });
+      homeHeroDots.forEach((dot, index) => dot.addEventListener('click', () => {
+        setHomeHeroSlide(index);
+        restartHomeHeroRotation();
+      }));
+
+      setHomeHeroSlide(0);
+      restartHomeHeroRotation();
     }
 
     const links = Array.from(document.querySelectorAll('a[href]'))
@@ -296,26 +321,26 @@
       {
         name: 'Urban Essentials',
         description: 'Modern staples designed in sleek and crisp tones.',
-        image: 'photos/jean1.png',
-        price: 42,
+        image: 'photos/featured-urban.jpg',
+        alt: 'Woman in a white shirt and denim jeans against a city backdrop',
       },
       {
         name: 'Statement Looks',
         description: 'Head-turning styles for when you want to make a lasting impression.',
-        image: 'photos/dress1.png',
-        price: 48,
+        image: 'photos/featured-statement.jpg',
+        alt: 'Woman smiling in a teal satin dress',
       },
       {
         name: 'Everyday Essentials',
         description: 'Easy everyday pieces with a polished, versatile finish.',
-        image: 'photos/jean2.png',
-        price: 45,
+        image: 'photos/featured-everyday.jpg',
+        alt: 'Close-up of a mustard knit sweater and denim jeans',
       },
       {
         name: 'Second Look',
         description: 'A statement dress designed for memorable occasions.',
-        image: 'photos/dress2.png',
-        price: 38,
+        image: 'photos/featured-secondlook.jpg',
+        alt: 'Woman in a beige midi dress and blazer with a headscarf',
       },
     ];
 
@@ -333,7 +358,7 @@
         if (item.image) {
           const image = document.createElement('img');
           image.className = 'lazy-image';
-          image.alt = `${item.name || 'Collection'} product photo`;
+          image.alt = item.alt || `${item.name || 'Collection'} product photo`;
           image.loading = 'lazy';
           image.decoding = 'async';
           image.addEventListener('load', () => image.classList.add('loaded'), { once: true });
@@ -347,61 +372,13 @@
         const description = document.createElement('p');
         description.textContent = item.description || 'Description coming soon.';
 
-        const footer = document.createElement('div');
-        footer.className = 'featured-card-footer';
-
-        const price = document.createElement('p');
-        price.className = 'featured-card-price';
-        price.textContent = Number.isFinite(Number(item.price)) ? `$${Number(item.price).toFixed(2)}` : 'View details';
-
-        // No favorite button here: these are hand-picked marketing tiles, not
-        // real catalog products (no id), so there is nothing to persist —
-        // favoriting lives on the actual product cards in collection.html.
-        footer.append(price);
-        card.append(title, description, footer);
+        card.append(title, description);
         featuredCards.appendChild(card);
       });
       window.SparkleUI?.refreshReveals?.(featuredCards);
     };
 
     renderFeaturedCollections(featuredCollections);
-
-    const newsletterForm = document.getElementById('newsletter-form');
-    const newsletterStatus = document.getElementById('newsletter-status');
-
-    newsletterForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('newsletter-email').value.trim();
-      const button = newsletterForm.querySelector('button[type="submit"]');
-
-      newsletterStatus.hidden = true;
-      SparkleUI.setBusy(button, true, 'Joining...');
-
-      try {
-        if (!USE_BACKEND) {
-          SparkleUI.announce(newsletterStatus, 'Newsletter signup will be available soon.', 'warning');
-          return;
-        }
-
-        const response = await fetch(`${API_BASE}/subscribe`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        });
-        const data = await response.json();
-
-        if (!response.ok) {
-          SparkleUI.announce(newsletterStatus, data.error || 'Could not subscribe. Please try again.', 'error');
-        } else {
-          SparkleUI.announce(newsletterStatus, "You're on the list! Thanks for joining.", 'success');
-          newsletterForm.reset();
-        }
-      } catch (err) {
-        SparkleUI.announce(newsletterStatus, 'Could not reach the server. Is the backend running?', 'error');
-      } finally {
-        SparkleUI.setBusy(button, false);
-      }
-    });
   </script>
 </body>
 </html>

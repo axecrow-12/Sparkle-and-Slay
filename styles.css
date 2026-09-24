@@ -514,61 +514,9 @@ body.page-exit {
   font-size: 1rem;
 }
 
-.arrivals-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.8rem;
-}
-
-.arrival-card {
-  background: #ffffff;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border: 1px solid rgba(43, 122, 75, 0.08);
-}
-
-.arrival-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 40px rgba(43, 122, 75, 0.15);
-}
-
-.arrival-image {
-  width: 100%;
-  height: 200px;
-  background: linear-gradient(135deg, var(--accent-soft) 0%, var(--brand-blue) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 3rem;
-}
-
-.arrival-card h4 {
-  margin: 1.2rem 1rem 0.4rem;
-  font-size: 1.1rem;
-  color: var(--text);
-}
-
-.arrival-card p {
-  margin: 0 1rem 1.2rem;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
 @media (max-width: 768px) {
   .hero-arrivals {
     padding: 2rem 1.5rem;
-  }
-
-  .arrivals-grid {
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 1rem;
-  }
-
-  .arrival-image {
-    height: 180px;
   }
 }
 
@@ -2864,19 +2812,12 @@ select[aria-invalid="true"] {
   to { background-position: -135% 0; }
 }
 
-.media-container,
-.arrival-image { aspect-ratio: 4 / 5; height: auto; }
+.media-container { aspect-ratio: 4 / 5; height: auto; }
 
 .media-container img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-}
-
-.arrival-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .site-footer .footer-section a { color: var(--dark); text-decoration: underline; text-underline-offset: 0.16em; }
@@ -3216,7 +3157,7 @@ header.home-header .home-hero-content {
   max-height: 760px;
   overflow: hidden;
   background-color: var(--dark);
-  background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.15) 100%), url('photos/SandSlay Backdrop 2.jpg');
+  background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.15) 100%), url('photos/hero-boutique-1.jpg');
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center 25%;
@@ -3619,7 +3560,7 @@ body.collection-page {
   min-height: 0;
   max-height: none;
   border-radius: 14px;
-  background-image: linear-gradient(90deg, rgba(7, 42, 31, 0.94) 0%, rgba(10, 46, 34, 0.77) 32%, rgba(10, 46, 34, 0.31) 60%, rgba(10, 46, 34, 0.08) 100%), url('photos/SandSlay Backdrop 2.jpg');
+  background-image: linear-gradient(90deg, rgba(7, 42, 31, 0.94) 0%, rgba(10, 46, 34, 0.77) 32%, rgba(10, 46, 34, 0.31) 60%, rgba(10, 46, 34, 0.08) 100%), url('photos/hero-boutique-1.jpg');
   background-position: center 47%;
   box-shadow: 0 15px 28px rgba(46, 37, 22, 0.1);
   isolation: isolate;
@@ -4030,6 +3971,22 @@ body.home-page {
   font-size: 0.8rem;
   font-weight: 500;
 }
+.home-page .home-topbar-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-right: 0.9rem;
+  border-right: 1px solid rgba(247, 242, 229, 0.28);
+}
+.home-page .home-topbar-tagline {
+  padding-left: 0.9rem;
+  color: #cdb98a;
+  letter-spacing: 0.02em;
+}
+@media (max-width: 720px) {
+  .home-page .home-topbar-tagline { display: none; }
+  .home-page .home-topbar-item { border-right: 0; padding-right: 0; }
+}
 
 .home-page .home-header {
   display: block;
@@ -4123,9 +4080,8 @@ body.home-page {
   border-radius: 50%;
   font-size: 0.78rem;
 }
-.home-page .home-social-links { display: flex; gap: 0.7rem; }
-.home-page .home-social-links a,
-.home-page .home-cart-link {
+.home-page .home-header-actions { display: flex; align-items: center; gap: 0.7rem; }
+.home-page .home-icon-link {
   position: relative;
   display: grid;
   width: 42px;
@@ -4136,9 +4092,15 @@ body.home-page {
   color: #102c24;
   background: transparent;
 }
-.home-page .home-social-links a:hover,
-.home-page .home-cart-link:hover { background: #eef1e8; border-color: #6c875d; }
-.home-page .home-cart-link { margin-left: 0.8rem; font-size: 1.15rem; }
+.home-page .home-icon-link:hover { background: #eef1e8; border-color: #6c875d; }
+.home-page .home-cart-link { font-size: 1.15rem; }
+.home-page .home-header-actions .home-contact-link {
+  margin-left: 0.4rem;
+  padding-left: 1rem;
+  padding-right: 0;
+  border-right: 0;
+  border-left: 1px solid rgba(16, 44, 36, 0.12);
+}
 .home-cart-badge[hidden] {
   display: none;
 }
@@ -4169,16 +4131,12 @@ body.home-page {
   margin: 0.55rem auto 0;
   overflow: hidden;
   border-radius: 15px;
-  background: #102a21;
+  background-color: #102a21;
+  background-image: linear-gradient(90deg, rgba(5, 38, 28, 0.96) 0%, rgba(7, 43, 30, 0.77) 31%, rgba(7, 43, 30, 0.29) 60%, rgba(7, 43, 30, 0.1) 100%), url('photos/home-hero-1.jpg');
+  background-size: cover;
+  background-position: center 30%;
   isolation: isolate;
   box-shadow: 0 16px 30px rgba(42, 33, 21, 0.09);
-}
-.home-page .home-editorial-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(90deg, rgba(5, 38, 28, 0.96) 0%, rgba(7, 43, 30, 0.77) 31%, rgba(7, 43, 30, 0.29) 60%, rgba(7, 43, 30, 0.1) 100%);
 }
 .home-page .home-editorial-hero::after {
   content: '';
@@ -4193,15 +4151,19 @@ body.home-page {
   transform: rotate(20deg);
   pointer-events: none;
 }
-.home-page .home-editorial-hero .header-video {
+.home-hero-caption {
   position: absolute;
-  inset: 0;
-  z-index: 0;
-  width: 100%;
-  height: 100%;
-  min-width: 0;
-  object-fit: cover;
-  object-position: center 40%;
+  z-index: 3;
+  right: clamp(1.5rem, 4vw, 3.5rem);
+  bottom: clamp(1.5rem, 4vw, 2.75rem);
+  margin: 0;
+  color: #f3ead3;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.05rem, 1.6vw, 1.4rem);
+  font-style: italic;
+  line-height: 1.25;
+  text-align: right;
+  text-shadow: 0 2px 10px rgba(5, 38, 28, 0.6);
 }
 .home-page .home-hero-content {
   position: relative;
@@ -4285,7 +4247,8 @@ body.home-page {
   height: 61px;
   place-items: center;
   border-radius: 50%;
-  background: #eef0e7;
+  background: transparent;
+  border: 1.5px solid #a2793f;
   color: #10392c;
   font-size: 1.45rem;
 }
@@ -4359,8 +4322,8 @@ body.home-page {
 .home-page #featured-collection .cards {
   position: relative;
   z-index: 1;
-  max-width: 1240px;
-  gap: 1.25rem;
+  max-width: 1360px;
+  gap: 1.5rem;
 }
 .home-page #featured-collection .card {
   position: relative;
@@ -4373,39 +4336,18 @@ body.home-page {
 }
 .home-page #featured-collection .card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(48, 37, 19, 0.12); }
 .home-page #featured-collection .card > img {
-  height: 132px;
+  width: 100%;
+  height: 380px;
   border-radius: 8px;
   object-fit: cover;
 }
 .home-page #featured-collection .card h4 {
-  margin: 0.7rem 0 0.25rem;
+  margin: 0.85rem 0 0.25rem;
   color: #17372c;
-  font-size: 0.76rem;
+  font-size: 0.92rem;
   line-height: 1.2;
 }
 .home-page #featured-collection .card > p { display: none; }
-.featured-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-top: 0.25rem;
-}
-.featured-card-price { margin: 0; color: #9b7138; font-size: 0.78rem; font-weight: 700; }
-.featured-favorite {
-  display: grid;
-  width: 31px;
-  min-height: 31px;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #a58140;
-  font-size: 1.1rem;
-  cursor: pointer;
-}
-.featured-favorite.is-favorite { color: #805b23; }
-.featured-favorite.is-favorite i { font-weight: 900; }
 .home-page #featured-collection .home-featured-cta {
   position: relative;
   z-index: 1;
@@ -4430,7 +4372,7 @@ body.home-page {
   .home-page .home-header-inner, .home-page .home-editorial-hero { margin-inline: 1.25rem; }
   .home-page .home-benefits { margin-inline: 2.2rem; padding-inline: 3rem; }
   .home-benefit { padding-inline: 1.4rem; }
-  .home-page .home-social-links { gap: 0.45rem; }
+  .home-page .home-header-actions { gap: 0.45rem; }
 }
 @media (max-width: 1200px) {
   .home-page .home-header-inner { gap: 1rem; }
@@ -4446,12 +4388,10 @@ body.home-page {
   .home-benefit:nth-child(3) { padding-left: 0; }
 }
 @media (max-width: 720px) {
-  .home-page .home-social-links { display: none; }
   .home-page .home-brand .logo { width: 44px; height: 52px; }
   .home-page .home-nav { justify-content: flex-start; overflow-x: auto; }
   .home-page .home-nav a { flex: 0 0 auto; }
-  .home-page .home-editorial-hero { height: 500px; margin-inline: 0; border-radius: 0; }
-  .home-page .home-editorial-hero .header-video { object-position: center; }
+  .home-page .home-editorial-hero { height: 500px; margin-inline: 0; border-radius: 0; background-position: center; }
   .home-page .home-hero-content { padding: 0 3rem; }
   .home-page .home-benefits { grid-template-columns: 1fr; margin: 0; padding: 1.25rem 1.5rem; border-radius: 0; }
   .home-benefit, .home-benefit:first-child, .home-benefit:nth-child(3) { padding: 0.55rem 0; border-right: 0; }
@@ -4467,7 +4407,7 @@ body.home-page {
   .home-page .home-editorial-hero { height: 440px; }
   .home-page .home-hero-content { padding-inline: 2rem; }
   .home-page .home-hero-content h1 { font-size: 3rem; }
-  .home-page #featured-collection .card > img { height: 115px; }
+  .home-page #featured-collection .card > img { height: 260px; }
 }
 
 /* New-arrival gallery and collection callout on the home page. */
@@ -4522,11 +4462,13 @@ body.home-page {
 }
 .home-page .arrivals-header > p:not(.arrivals-kicker) { color: #607169; font-size: 0.9rem; }
 .home-page .arrivals-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: 1.3fr 1fr;
+  grid-auto-rows: 1fr;
   gap: 1.25rem;
 }
 .home-page .arrival-card {
   position: relative;
+  display: flex;
   overflow: hidden;
   border: 1px solid rgba(49, 65, 48, 0.08);
   border-radius: 13px;
@@ -4534,67 +4476,32 @@ body.home-page {
   box-shadow: 0 12px 25px rgba(54, 54, 35, 0.09);
 }
 .home-page .arrival-card:hover { transform: translateY(-4px); box-shadow: 0 17px 30px rgba(54, 54, 35, 0.14); }
+.home-page .arrival-card.is-hero { grid-row: span 2; }
 .home-page .arrival-image {
   position: relative;
-  height: 284px;
-  aspect-ratio: auto;
+  flex: 1;
+  min-height: 190px;
   background: #ebeee5;
 }
-.home-page .arrival-image img { width: 100%; height: 100%; object-fit: cover; }
-.home-page .arrival-card:first-child .arrival-image::after {
+.home-page .arrival-card.is-hero .arrival-image { min-height: 380px; }
+.home-page .arrival-image img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.home-page .arrival-card.is-hero .arrival-image::after {
   content: 'New\A Drops';
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 14px;
+  left: 14px;
   display: grid;
-  width: 63px;
-  height: 63px;
+  width: 66px;
+  height: 66px;
   place-items: center;
   border-radius: 50%;
   background: #0c3d2e;
   color: #fff;
-  font-size: 0.73rem;
+  font-size: 0.75rem;
   font-weight: 600;
   line-height: 1.05;
   text-align: center;
   white-space: pre;
-}
-.home-page .arrival-card-content {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  min-height: 108px;
-  padding: 0.75rem 0.85rem;
-}
-.home-page .arrival-icon {
-  display: grid;
-  flex: 0 0 50px;
-  width: 50px;
-  height: 50px;
-  place-items: center;
-  border-radius: 50%;
-  background: #eef3e7;
-  color: #416a43;
-  font-size: 1.2rem;
-}
-.home-page .arrival-card h4 {
-  margin: 0 0 0.15rem;
-  color: #132e25;
-  font-size: 0.93rem;
-}
-.home-page .arrival-card p {
-  margin: 0;
-  color: #67736d;
-  font-size: 0.77rem;
-}
-.home-page .arrival-card a {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.65rem;
-  margin-top: 0.65rem;
-  color: #194a36;
-  font-size: 0.76rem;
-  font-weight: 700;
 }
 .home-page .arrivals-all-cta {
   display: flex;
@@ -4711,7 +4618,6 @@ body.home-page {
 }
 
 @media (max-width: 900px) {
-  .home-page .arrivals-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .home-page .home-collection-cta { grid-template-columns: 1fr; }
   .home-page .home-collection-image { min-height: 300px; }
   .home-page .home-collection-image img { height: 300px; }
@@ -4719,7 +4625,9 @@ body.home-page {
 @media (max-width: 600px) {
   .home-page .hero-arrivals { padding-inline: 1rem; }
   .home-page .arrivals-grid { grid-template-columns: 1fr; }
-  .home-page .arrival-image { height: 320px; }
+  .home-page .arrival-card.is-hero { grid-row: auto; }
+  .home-page .arrival-image,
+  .home-page .arrival-card.is-hero .arrival-image { min-height: 260px; }
   .home-page #collection { padding-inline: 1rem; }
   .home-page .home-collection-copy { padding: 2.4rem 1.5rem; }
   .home-page .home-collection-copy h2 br, .home-page .home-collection-copy > p br { display: none; }
