@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Shop the Collection &mdash; Sparkle &amp; Slay Boutique, Harare</title>
   <meta name="description" content="Browse the full Sparkle &amp; Slay collection &mdash; new-season dresses, denim and statement pieces. Order online, pay with EcoCash, delivered across Harare." />
-  <link rel="canonical" href="https://sparkleandslay.com/collection.html" />
+  <link rel="canonical" href="https://sparkleandslay.net/collection.html" />
   <link rel="icon" href="photos/A5ecfa8534cd84b8c9e91661fcf73dfc0C-removebg-preview.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="styles.css" />
@@ -145,11 +145,13 @@
         </div>
         <p class="cart-drop-hint">Review your selections and choose a payment method when you are ready.</p>
         <div id="cart-items"></div>
-        <div class="cart-summary">
-          <div class="cart-total"><span>Grand Total</span><strong id="cart-total">$0.00</strong></div>
+        <div class="cart-panel-footer">
+          <div class="cart-summary">
+            <div class="cart-total"><span>Grand Total</span><strong id="cart-total">$0.00</strong></div>
+          </div>
+          <button id="checkout-cart" class="button" type="button">Submit EcoCash Reference</button>
+          <button id="api-checkout-cart" class="button button-secondary" type="button">Pay with EcoCash</button>
         </div>
-        <button id="checkout-cart" class="button" type="button">Manual EcoCash payment</button>
-        <button id="api-checkout-cart" class="button button-secondary" type="button">Pay with EcoCash</button>
       </aside>
 
       <button id="cart-toast" class="cart-toast" type="button" aria-label="Open shopping cart">

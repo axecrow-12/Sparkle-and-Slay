@@ -470,18 +470,20 @@ body.page-exit {
 
 .button {
   display: inline-block;
-  background:  #f56614;
-  color: #1f3f35;
+  background: #0b392b;
+  border: 1px solid #0b392b;
+  color: #fff;
   padding: 0.95rem 1.7rem;
   border-radius: 999px;
   font-weight: 700;
-  box-shadow: 0 16px 30px rgba(43, 122, 75, 0.25);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 16px 30px rgba(11, 57, 43, 0.2);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
 }
 
 .button:hover {
+  background: #1b5845;
   transform: translateY(-2px);
-  box-shadow: 0 22px 40px rgba(43, 122, 75, 0.32);
+  box-shadow: 0 22px 40px rgba(11, 57, 43, 0.28);
 }
 
 /* Hero Arrivals Section */
@@ -770,7 +772,7 @@ body.page-exit {
   border: none;
   border-right: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 0 24px 24px 0;
-  background: rgba(255, 255, 255, 0.98);
+  background: #fff;
   box-shadow: 20px 0 60px rgba(22, 45, 43, 0.2);
   transform: translateX(-105%);
   transition: transform 240ms ease;
@@ -842,9 +844,21 @@ body.page-exit {
 }
 
 #cart-items {
-  flex: 1;
+  flex: 0 1 auto;
+  min-height: 0;
   overflow-y: auto;
   padding-right: 0.25rem;
+}
+
+.cart-panel-footer {
+  flex: 0 0 auto;
+  margin-top: auto;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(22, 45, 43, 0.1);
+}
+
+.cart-panel-footer .cart-summary {
+  margin-top: 0;
 }
 
 .cart-item {
@@ -945,10 +959,12 @@ body.page-exit {
   margin: 1rem 0;
 }
 
-.cart-panel > #checkout-cart {
-  flex: 0 0 auto;
+.cart-panel-footer #checkout-cart,
+.cart-panel-footer #api-checkout-cart {
+  display: block;
   width: 100%;
-  margin-top: 1rem;
+  margin-top: 0.75rem;
+  text-align: center;
 }
 
 .cart-summary {
@@ -2428,8 +2444,15 @@ body.page-exit {
 }
 
 .button-secondary {
-  background: #6c757d;
-  color: #fff;
+  border: 1px solid rgba(16, 58, 43, 0.2);
+  background: #fffefb;
+  color: #173b2d;
+  box-shadow: none;
+}
+
+.button-secondary:hover {
+  background: #f1ede4;
+  box-shadow: none;
 }
 
 .modal-overlay {

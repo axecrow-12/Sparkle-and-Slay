@@ -29,7 +29,7 @@ These four behave differently in production than they do during local developmen
 | Variable | Local value | Production value |
 |---|---|---|
 | `APP_ENV` | `local` | anything else, or unset (production is the default, fail-safe behavior) |
-| `FRONTEND_ORIGIN` | `http://localhost:5500` (or unset, falls back automatically) | the real frontend domain, exactly, scheme included (`https://sparkleandslay.com`) |
+| `FRONTEND_ORIGIN` | `http://localhost:5500` (or unset, falls back automatically) | the real frontend domain, exactly, scheme included (`https://sparkleandslay.net`) |
 | `ECOCASH_API_URL` / `ECOCASH_QUERY_BASE_URL` | the `-preprod` EcoCash endpoints | the production EcoCash endpoints, only after a successful preprod test transaction |
 | `ECOCASH_NOTIFY_URL` | an `ngrok` tunnel URL | the real, permanent, public HTTPS URL ending in `/api/ecocash/notify` |
 
@@ -94,8 +94,8 @@ The storefront pages (`index.html`, `collection.html`, `contact.html`,
    API instead lives on a separate domain or subdomain, replace the else-branch
    in `config.js` with that fixed HTTPS origin.
 2. **Canonical URLs** — every page has
-   `<link rel="canonical" href="https://sparkleandslay.com/...">`. If the real
-   domain differs, find/replace `https://sparkleandslay.com` across the `.html`
+   `<link rel="canonical" href="https://sparkleandslay.net/...">`. If the real
+   domain differs, find/replace `https://sparkleandslay.net` across the `.html`
    files.
 3. **Security headers** — the repo ships two equivalent configs; keep the one
    your host uses:
@@ -121,7 +121,7 @@ The storefront pages (`index.html`, `collection.html`, `contact.html`,
 ## cPanel walkthrough (same domain, `/api` path, SSH available)
 
 This project's chosen layout: frontend and API on the same domain
-(`sparkleandslay.com` and `sparkleandslay.com/api`), deploying with SSH access
+(`sparkleandslay.net` and `sparkleandslay.net/api`), deploying with SSH access
 to cPanel (cPanel's **Terminal** app, or a real SSH client). Run everything
 below from the account's home directory unless noted.
 
@@ -129,7 +129,7 @@ below from the account's home directory unless noted.
 
 `public_html` is the only web-accessible folder. `server-php/`'s `.env`,
 `src/`, `vendor/`, and `migrations/` must **never** live inside it — otherwise
-`https://sparkleandslay.com/.env` is a real, fetchable URL. Upload (via Git,
+`https://sparkleandslay.net/.env` is a real, fetchable URL. Upload (via Git,
 SFTP, or cPanel's File Manager) the whole `server-php` folder into the home
 directory, as a sibling of `public_html`:
 
@@ -161,7 +161,7 @@ extracted through File Manager is much faster than per-file SFTP).
     cd ~/public_html
     ln -s ~/server-php/public api
 
-This makes `https://sparkleandslay.com/api/...` serve
+This makes `https://sparkleandslay.net/api/...` serve
 `~/server-php/public/index.php`, whose own `__DIR__ . '/../...'` paths
 (`vendor/autoload.php`, `.env`) still resolve to the real `~/server-php/`
 directory — so nothing sensitive ever sits inside `public_html`. The
@@ -190,8 +190,8 @@ Edit `.env` (cPanel File Manager's code editor, or `nano .env` over SSH):
 | `DB_NAME` / `DB_USER` / `DB_PASSWORD` | the prefixed values from the MySQL Databases page |
 | `JWT_SECRET` | fresh output of `php -r "echo bin2hex(random_bytes(32));"` — never the `.env.example` placeholder |
 | `APP_ENV` | unset, or anything other than `local` |
-| `FRONTEND_ORIGIN` | `https://sparkleandslay.com` exactly |
-| `ECOCASH_NOTIFY_URL` | `https://sparkleandslay.com/api/ecocash/notify` |
+| `FRONTEND_ORIGIN` | `https://sparkleandslay.net` exactly |
+| `ECOCASH_NOTIFY_URL` | `https://sparkleandslay.net/api/ecocash/notify` |
 | `ECOCASH_API_URL` / `ECOCASH_QUERY_BASE_URL` | keep the `-preprod` values until a successful preprod transaction (see step 6) |
 
 ### 5. Migrate and set permissions
@@ -205,7 +205,7 @@ Edit `.env` (cPanel File Manager's code editor, or `nano .env` over SSH):
 cPanel's **SSL/TLS Status** → **AutoSSL** (or Let's Encrypt, depending on the
 host) needs to be issued and active for the domain before EcoCash's notify
 callback or the admin login are usable. Then work through the smoke test
-below against `https://sparkleandslay.com`.
+below against `https://sparkleandslay.net`.
 
 
 
